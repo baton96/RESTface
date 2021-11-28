@@ -7,7 +7,7 @@ from urllib import parse
 from inflect import engine
 
 engine = engine()
-root = {}
+_root = {}
 
 op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
 ops = {
@@ -50,7 +50,9 @@ def get_params(request):
     return params
 
 
-def post(request, root=root, method='POST'):
+def post(request, root=None, method='POST'):
+    if root is None:
+        root = _root
     url = request['url']
     parts = parse.urlsplit(url).path.split('/')[1:]
     # Remove '/' from the end of url
@@ -97,7 +99,9 @@ def post(request, root=root, method='POST'):
                         return root[part][i]
 
 
-def get(request, root=root):
+def get(request, root=None):
+    if root is None:
+        root = _root
     parts = parse.urlsplit(request['url']).path.split('/')[1:]
     if not parts[-1]:
         parts.pop()
@@ -124,7 +128,9 @@ def get(request, root=root):
         return items
 
 
-def delete(request, root=root):
+def delete(request, root=None):
+    if root is None:
+        root = _root
     parts = parse.urlsplit(request['url']).path.split('/')[1:]
     if not parts[-1]:
         parts.pop()
