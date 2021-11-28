@@ -6,6 +6,14 @@ from urllib import parse
 
 from inflect import engine
 
+# TODO:
+# blank parameters in POST and GET
+# memory, sqlite, fs
+# schemas set/validate
+# autogenerate Swagger/OpenAPI specs
+# example app using RESTface
+# path of storage file json/sqlite
+
 engine = engine()
 _root = {}
 
@@ -20,7 +28,6 @@ ops['lte'] = operator.le
 ops['neq'] = operator.ne
 
 
-# TODO: blank parameters in POST and GET
 def is_valid_uuid(obj):
     try:
         uuid.UUID(obj)
