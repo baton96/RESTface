@@ -1,6 +1,6 @@
 import pytest
 
-from restface import get, post
+from RESTface import get, post
 
 
 @pytest.fixture

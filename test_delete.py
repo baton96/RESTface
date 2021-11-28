@@ -1,6 +1,6 @@
 import pytest
 
-from restface import post, delete
+from RESTface import post, delete
 
 
 @pytest.fixture
