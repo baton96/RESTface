@@ -1,6 +1,6 @@
 import pytest
 
-from RESTface import post
+from RESTface import post, put
 
 
 @pytest.fixture
@@ -82,7 +82,7 @@ def test_modify_put(root):
     post(request, root)
     assert root == {'users': {1: {'id': 1, 'a': 'b'}}}
     request = {'url': 'https://example.com/users/1?c=d'}
-    post(request, root, method='PUT')
+    put(request, root)
     assert root == {'users': {1: {'id': 1, 'c': 'd'}}}
 
 

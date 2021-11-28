@@ -29,6 +29,33 @@ def is_valid_uuid(obj):
         return False
 
 
+def get_parts(request):
+    url = request['url']
+    parts = parse.urlsplit(url).path.split('/')[1:]
+    # Remove '/' from the end of url
+    if not parts[-1]:
+        parts.pop()
+    return parts
+
+
+def create_subhierarchy(parts, root):
+    meta = {}
+    for i, part in enumerate(parts):
+        # If part is item id
+        if part.isdigit() or is_valid_uuid(part):
+            if part.isdigit():
+                part = int(part)
+            if part not in root[parts[i - 1]]:
+                root[parts[i - 1]][part] = {'id': part, **meta}
+            meta = {engine.singular_noun(parts[i - 1]) + '_id': part}
+        # If part is collection name
+        else:
+            # If no such collection then create it
+            if part not in root:
+                root[part] = {}
+    return meta
+
+
 def get_params(request):
     url = request['url']
     query = parse.urlsplit(url).query
@@ -50,94 +77,70 @@ def get_params(request):
     return params
 
 
-def post(request, root=None, method='POST'):
+def handler(request, method, root=None):
     if root is None:
         root = _root
-    url = request['url']
-    parts = parse.urlsplit(url).path.split('/')[1:]
-    # Remove '/' from the end of url
-    if not parts[-1]:
-        parts.pop()
+    parts = get_parts(request)
+    meta = create_subhierarchy(parts, root)
 
-    meta = {}
-    for i, part in enumerate(parts):
-        # If part is item id
-        if part.isdigit() or is_valid_uuid(part):
-            if part.isdigit():
-                part = int(part)
-            # If it's last part
-            if i == len(parts) - 1:
-                body = request.get('body', {})
-                params = get_params(request)
-                if method == 'PUT' or part not in root[parts[i - 1]]:
-                    root[parts[i - 1]][part] = {'id': part, **meta, **params, **body}
-                # method == 'POST and part in collection
-                else:
-                    root[parts[i - 1]][part].update(**meta, **params, **body)
-                return root[parts[i - 1]][part]
-            # If not the last part
+    part = parts[-1]
+    if part.isdigit() or is_valid_uuid(part):
+        if part.isdigit():
+            part = int(part)
+
+        if method == 'GET':
+            return [root[parts[-2]][part]]
+        elif method in {'POST', 'PUT'}:
+            body = request.get('body', {})
+            params = get_params(request)
+            if method == 'PUT' or part not in root[parts[-2]]:
+                root[parts[-2]][part] = {'id': part, **params, **body}
+            # method == 'POST and part in collection
             else:
-                if part not in root[parts[i - 1]]:
-                    root[parts[i - 1]][part] = {'id': part}
-                root[parts[i - 1]][part].update(meta)
-                meta = {engine.singular_noun(parts[i - 1]) + '_id': part}
+                root[parts[-2]][part].update(**params, **body)
+            return root[parts[-2]][part]
+        elif method == 'DELETE':
+            root[parts[-2]].pop(part, None)
+    else:
+        if method == 'GET':
+            items = list(root[part].values())
+            params = get_params(request)
+            if len(parts) > 2:
+                parent_id_name = engine.singular_noun(parts[-3]) + '_id'
+                parent_id = parts[-2]
+                if parent_id.isdigit():
+                    parent_id = int(parent_id)
+                params[parent_id_name] = parent_id
+            for param_name, param_value in params.items():
+                if '__' not in param_name:
+                    param_name = f'{param_name}__eq'
+                field_name, op_name = param_name.split('__')
+                op = ops[op_name]
+                items = [item for item in items if op(item[field_name], param_value)]
+            return items
+        elif method in {'POST', 'PUT'}:
+            ids = root[part].keys()
+            for i in itertools.count(1):
+                if i not in ids:
+                    body = request.get('body', {})
+                    params = get_params(request)
+                    root[part][i] = {'id': i, **meta, **params, **body}
+                    return root[part][i]
+        elif method == 'DELETE':
+            root.pop(part, None)
 
-        # If part is collection name
-        else:
-            # If no such collection then create it
-            if part not in root:
-                root[part] = {}
-            # If it's last part
-            if i == len(parts) - 1:
-                # Come up with unique id
-                ids = root[part].keys()
-                for i in itertools.count(1):
-                    if i not in ids:
-                        body = request.get('body', {})
-                        params = get_params(request)
-                        root[part][i] = {'id': i, **meta, **params, **body}
-                        return root[part][i]
+
+def post(request, root=None):
+    return handler(request, 'POST', root)
 
 
 def get(request, root=None):
-    if root is None:
-        root = _root
-    parts = parse.urlsplit(request['url']).path.split('/')[1:]
-    if not parts[-1]:
-        parts.pop()
-    part = parts[-1]
-    if part.isdigit() or is_valid_uuid(part):
-        if part.isdigit():
-            part = int(part)
-        return [root[parts[-2]][part]]
-    else:
-        items = list(root[part].values())
-        params = get_params(request)
-        if len(parts) > 2:
-            parent_id_name = engine.singular_noun(parts[-3]) + '_id'
-            parent_id = parts[-2]
-            if parent_id.isdigit():
-                parent_id = int(parent_id)
-            params[parent_id_name] = parent_id
-        for param_name, param_value in params.items():
-            if '__' not in param_name:
-                param_name = f'{param_name}__eq'
-            field_name, op_name = param_name.split('__')
-            op = ops[op_name]
-            items = [item for item in items if op(item[field_name], param_value)]
-        return items
+    return handler(request, 'GET', root)
+
+
+def put(request, root=None):
+    return handler(request, 'PUT', root)
 
 
 def delete(request, root=None):
-    if root is None:
-        root = _root
-    parts = parse.urlsplit(request['url']).path.split('/')[1:]
-    if not parts[-1]:
-        parts.pop()
-    part = parts[-1]
-    if part.isdigit() or is_valid_uuid(part):
-        if part.isdigit():
-            part = int(part)
-        root[parts[-2]].pop(part, None)
-    else:
-        root.pop(part, None)
+    return handler(request, 'DELETE', root)
