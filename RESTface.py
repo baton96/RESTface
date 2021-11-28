@@ -91,7 +91,9 @@ def handler(request, method, root=None):
                 root[parts[-2]][part].update(**params, **body)
             return root[parts[-2]][part]
         elif method == 'DELETE':
+            was_present = part in root[parts[-2]]
             root[parts[-2]].pop(part, None)
+            return was_present
     else:
         if method == 'GET':
             items = list(root[part].values())
@@ -118,7 +120,9 @@ def handler(request, method, root=None):
                     root[part][i] = {'id': i, **parent_info, **params, **body}
                     return root[part][i]
         elif method == 'DELETE':
+            was_present = part in root
             root.pop(part, None)
+            return was_present
 
 
 def post(request, root=None):
