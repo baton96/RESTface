@@ -29,14 +29,6 @@ def is_valid_uuid(obj):
         return False
 
 
-def get_parts(url):
-    parts = parse.urlsplit(url).path.split('/')[1:]
-    # Remove '/' from the end of url
-    if not parts[-1]:
-        parts.pop()
-    return parts
-
-
 def create_subhierarchy(parts, root):
     parent_info = {}
     for i, part in enumerate(parts):
@@ -79,7 +71,7 @@ def get_params(request):
 def handler(request, method, root=None):
     if root is None:
         root = _root
-    parts = get_parts(request['url'])
+    parts = parse.urlsplit(request['url']).path.strip('/').split('/')
     parent_info = create_subhierarchy(parts, root)
 
     part = parts[-1]
