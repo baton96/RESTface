@@ -29,8 +29,7 @@ def is_valid_uuid(obj):
         return False
 
 
-def get_parts(request):
-    url = request['url']
+def get_parts(url):
     parts = parse.urlsplit(url).path.split('/')[1:]
     # Remove '/' from the end of url
     if not parts[-1]:
@@ -39,21 +38,21 @@ def get_parts(request):
 
 
 def create_subhierarchy(parts, root):
-    meta = {}
+    parent_info = {}
     for i, part in enumerate(parts):
         # If part is item id
         if part.isdigit() or is_valid_uuid(part):
             if part.isdigit():
                 part = int(part)
             if part not in root[parts[i - 1]]:
-                root[parts[i - 1]][part] = {'id': part, **meta}
-            meta = {engine.singular_noun(parts[i - 1]) + '_id': part}
+                root[parts[i - 1]][part] = {'id': part, **parent_info}
+            parent_info = {engine.singular_noun(parts[i - 1]) + '_id': part}
         # If part is collection name
         else:
             # If no such collection then create it
             if part not in root:
                 root[part] = {}
-    return meta
+    return parent_info
 
 
 def get_params(request):
@@ -80,8 +79,8 @@ def get_params(request):
 def handler(request, method, root=None):
     if root is None:
         root = _root
-    parts = get_parts(request)
-    meta = create_subhierarchy(parts, root)
+    parts = get_parts(request['url'])
+    parent_info = create_subhierarchy(parts, root)
 
     part = parts[-1]
     if part.isdigit() or is_valid_uuid(part):
@@ -124,7 +123,7 @@ def handler(request, method, root=None):
                 if i not in ids:
                     body = request.get('body', {})
                     params = get_params(request)
-                    root[part][i] = {'id': i, **meta, **params, **body}
+                    root[part][i] = {'id': i, **parent_info, **params, **body}
                     return root[part][i]
         elif method == 'DELETE':
             root.pop(part, None)
