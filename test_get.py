@@ -4,6 +4,11 @@ from RESTface import get, post
 
 
 @pytest.fixture
+def empty_root():
+    return {}
+
+
+@pytest.fixture
 def root():
     _root = {}
     for i in range(1, 5):
@@ -61,3 +66,34 @@ def test_children(root_children):
 def test_children_custom(root_children):
     request = {'url': 'https://example.com/users/1/posts?id__lt=2'}
     assert get(request, root_children) == [{'id': 1, 'user_id': 1}]
+
+
+def test_simple_no_id(empty_root):
+    request = {'url': 'https://example.com/users'}
+    assert get(request, empty_root) == []
+    assert empty_root == {'users': {}}
+
+
+def test_simple_id(empty_root):
+    request = {'url': 'https://example.com/users/1'}
+    assert get(request, empty_root) == [{'id': 1}]
+    assert empty_root == {'users': {1: {'id': 1}}}
+
+
+def test_simple_child(empty_root):
+    request = {'url': 'https://example.com/users/1/posts/2'}
+    assert get(request, empty_root) == [{'id': 2, 'user_id': 1}]
+    assert empty_root == {
+        'users': {1: {'id': 1}},
+        'posts': {2: {'id': 2, 'user_id': 1}}
+    }
+
+
+def test_simple_deep(empty_root):
+    request = {'url': 'https://example.com/users/1/posts/2/comments/3'}
+    assert get(request, empty_root) == [{'id': 3, 'post_id': 2}]
+    assert empty_root == {
+        'users': {1: {'id': 1}},
+        'posts': {2: {'id': 2, 'user_id': 1}},
+        'comments': {3: {'id': 3, 'post_id': 2}},
+    }
