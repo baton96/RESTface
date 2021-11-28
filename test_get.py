@@ -19,11 +19,20 @@ def root():
 
 @pytest.fixture
 def root_children():
-    _root_children = {}
+    _root = {}
     for i in range(4):
         request = {'url': f'https://example.com/users/{(i % 2) + 1}/posts'}
-        post(request, _root_children)
-    return _root_children
+        post(request, _root)
+    return _root
+
+
+@pytest.fixture
+def root_unsorted():
+    _root = {}
+    for i in [21, 3, 19, 37, 28]:
+        request = {'url': f'https://example.com/users/{i}'}
+        post(request, _root)
+    return _root
 
 
 def test_get_all(root):
@@ -97,3 +106,13 @@ def test_simple_deep(empty_root):
         'posts': {2: {'id': 2, 'user_id': 1}},
         'comments': {3: {'id': 3, 'post_id': 2}},
     }
+
+
+def test_sort(root_unsorted):
+    request = {'url': 'https://example.com/users?sort=id'}
+    assert get(request, root_unsorted) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
+
+
+def test_sort_desc(root_unsorted):
+    request = {'url': 'https://example.com/users?sort=id&desc'}
+    assert get(request, root_unsorted) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]

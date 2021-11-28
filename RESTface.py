@@ -104,6 +104,12 @@ def handler(request, method, root=None):
                 if parent_id.isdigit():
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
+            if 'sort' in params:
+                desc = 'desc' in params
+                sort_by = operator.itemgetter(params['sort'])
+                items = sorted(items, key=sort_by, reverse=desc)
+                params.pop('sort', None)
+            params.pop('desc', None)
             for param_name, param_value in params.items():
                 if '__' not in param_name:
                     param_name = f'{param_name}__eq'
