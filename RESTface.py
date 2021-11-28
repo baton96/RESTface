@@ -109,6 +109,12 @@ def get(request, root=root):
     else:
         items = list(root[part].values())
         params = get_params(request)
+        if len(parts) > 2:
+            parent_id_name = engine.singular_noun(parts[-3]) + '_id'
+            parent_id = parts[-2]
+            if parent_id.isdigit():
+                parent_id = int(parent_id)
+            params[parent_id_name] = parent_id
         for param_name, param_value in params.items():
             if '__' not in param_name:
                 param_name = f'{param_name}__eq'
