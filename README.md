@@ -1,4 +1,4 @@
-# 😴 restface 😴
+# 😴 RESTface 😴
 
 restface is a Python tool that provides minimal viable REST API
 
