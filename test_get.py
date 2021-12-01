@@ -116,3 +116,21 @@ def test_sort(root_unsorted):
 def test_sort_desc(root_unsorted):
     request = {'url': 'https://example.com/users?sort=id&desc'}
     assert get(request, root_unsorted) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
+
+
+def test_blank_param(empty_root):
+    for i in range(1, 5):
+        url = f'https://example.com/users?is_odd={i % 2}'
+        post({'url': url}, empty_root)
+    request = {'url': 'https://example.com/users?is_odd'}
+    assert get(request, empty_root) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]
+
+
+def test_blank_param_no_field(empty_root):
+    for i in range(1, 5):
+        url = f'https://example.com/users'
+        if i % 2:
+            url += '?is_odd=true'
+        post({'url': url}, empty_root)
+    request = {'url': 'https://example.com/users?is_odd'}
+    assert get(request, empty_root) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]

@@ -138,7 +138,9 @@ def handler(request, method, root=None):
                     param_name = f'{param_name}__eq'
                 field_name, op_name = param_name.split('__')
                 op = ops[op_name]
-                items = [item for item in items if op(item[field_name], param_value)]
+                if not param_value:
+                    op = lambda field, _: field
+                items = [item for item in items if op(item.get(field_name), param_value)]
             return items
         elif method in {'POST', 'PUT'}:
             ids = root[part].keys()
