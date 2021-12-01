@@ -6,6 +6,7 @@ from urllib import parse
 
 from inflect import engine
 
+
 # TODO:
 # blank parameters in POST and GET
 # memory, sqlite, fs
@@ -13,26 +14,39 @@ from inflect import engine
 # autogenerate Swagger/OpenAPI specs
 # example app using RESTface
 # path of storage file json/sqlite
+# types
+
+def get_ops() -> dict:
+    op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
+    _ops = {
+        op_name: operator.__getattribute__(op_name)
+        for op_name in op_names
+    }
+    _ops['in'] = lambda a, b: str(a) in re.split(", ?", b.strip('({[]})'))
+    _ops['gte'] = operator.ge
+    _ops['lte'] = operator.le
+    _ops['neq'] = operator.ne
+    return _ops
+
 
 engine = engine()
+ops = get_ops()
 _root = {}
 
-op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
-ops = {
-    op_name: operator.__getattribute__(op_name)
-    for op_name in op_names
-}
-ops['in'] = lambda a, b: str(a) in re.split(", ?", b.strip('({[]})'))
-ops['gte'] = operator.ge
-ops['lte'] = operator.le
-ops['neq'] = operator.ne
+
+def is_float(element):
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
 
 
 def is_valid_uuid(obj):
     try:
         uuid.UUID(obj)
         return True
-    except (ValueError, AttributeError):
+    except ValueError:
         return False
 
 
@@ -68,6 +82,8 @@ def get_params(request):
             param_value = int(param_value)
         elif param_value in ('none', 'null'):
             param_value = None
+        elif is_float(param_value):
+            param_value = float(param_value)
         else:
             params[param_name] = params[param_name][0]
             continue
