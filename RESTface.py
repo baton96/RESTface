@@ -127,13 +127,9 @@ def handler(request, method, root=None):
                 if parent_id.isdigit():
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
-            if 'sort' in params:
-                desc = 'desc' in params
-                sort_field = params['sort']
-                # Keep None but put it on the end of results
-                sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
-                items = sorted(items, key=sort_by, reverse=desc)
-                params.pop('sort', None)
+
+            sort_field = params.pop('sort', None)
+            desc = 'desc' in params
             params.pop('desc', None)
             for param_name, param_value in params.items():
                 if '__' not in param_name:
@@ -143,6 +139,11 @@ def handler(request, method, root=None):
                 if not param_value:
                     op = lambda field, _: field
                 items = [item for item in items if op(item.get(field_name), param_value)]
+
+            if sort_field:
+                # Keep None but put it on the end of results
+                sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
+                items = sorted(items, key=sort_by, reverse=desc)
             return items
         elif method in {'POST', 'PUT'}:
             ids = root[part].keys()
