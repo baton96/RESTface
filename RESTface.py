@@ -8,13 +8,11 @@ from inflect import engine
 
 
 # TODO:
-# blank parameters in POST and GET
 # memory, sqlite, fs
 # schemas set/validate
 # autogenerate Swagger/OpenAPI specs
 # example app using RESTface
 # path of storage file json/sqlite
-# types
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
@@ -34,7 +32,7 @@ ops = get_ops()
 _root = {}
 
 
-def is_float(element):
+def is_float(element) -> bool:
     try:
         float(element)
         return True
@@ -42,7 +40,7 @@ def is_float(element):
         return False
 
 
-def is_valid_uuid(obj):
+def is_valid_uuid(obj) -> bool:
     try:
         uuid.UUID(obj)
         return True
@@ -50,7 +48,7 @@ def is_valid_uuid(obj):
         return False
 
 
-def create_subhierarchy(parts, root):
+def create_subhierarchy(parts, root) -> dict:
     parent_info = {}
     for i, part in enumerate(parts):
         # If part is item id
@@ -68,7 +66,7 @@ def create_subhierarchy(parts, root):
     return parent_info
 
 
-def get_params(request):
+def get_params(request) -> dict:
     url = request['url']
     query = parse.urlsplit(url).query
     params = parse.parse_qs(query, keep_blank_values=True)
@@ -109,18 +107,18 @@ def handler(request, method, root=None):
             params = get_params(request)
             if method == 'PUT' or part not in root[parts[-2]]:
                 root[parts[-2]][part] = {'id': part, **params, **body}
-            # method == 'POST and part in collection
+            # If method is POST and part is in collection
             else:
                 root[parts[-2]][part].update(**params, **body)
             return root[parts[-2]][part]
         elif method == 'DELETE':
-            was_present = part in root[parts[-2]]
-            root[parts[-2]].pop(part, None)
-            return was_present
+            return bool(root[parts[-2]].pop(part, None))
     else:
         if method == 'GET':
             items = list(root[part].values())
             params = get_params(request)
+
+            # Filter by parent_id
             if len(parts) > 2:
                 parent_id_name = engine.singular_noun(parts[-3]) + '_id'
                 parent_id = parts[-2]
@@ -128,22 +126,29 @@ def handler(request, method, root=None):
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
 
+            # Prepare for sorting
             sort_field = params.pop('sort', None)
             desc = 'desc' in params
             params.pop('desc', None)
+
+            # Filtering by other fields
             for param_name, param_value in params.items():
+                # Equality is the default comparision method
                 if '__' not in param_name:
                     param_name = f'{param_name}__eq'
                 field_name, op_name = param_name.split('__')
                 op = ops[op_name]
+                # Handle blank parameters
                 if not param_value:
                     op = lambda field, _: field
                 items = [item for item in items if op(item.get(field_name), param_value)]
 
+            # Sorting
             if sort_field:
                 # Keep None but put it on the end of results
                 sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
                 items = sorted(items, key=sort_by, reverse=desc)
+
             return items
         elif method in {'POST', 'PUT'}:
             ids = root[part].keys()
@@ -154,9 +159,7 @@ def handler(request, method, root=None):
                     root[part][i] = {'id': i, **parent_info, **params, **body}
                     return root[part][i]
         elif method == 'DELETE':
-            was_present = part in root
-            root.pop(part, None)
-            return was_present
+            return bool(root.pop(part, None))
 
 
 def post(request, root=None):
