@@ -1,6 +1,6 @@
 import pytest
 
-from RESTface import post, put
+from RESTface import post, put, is_valid_uuid
 
 
 @pytest.fixture
@@ -12,20 +12,28 @@ def test_simple_no_id(root):
     request = {'url': 'https://example.com/users'}
     assert post(request, root) == {'id': 1}
     assert root == {'users': {1: {'id': 1}}}
-    assert post(request, root) == {'id': 2}
-    assert root == {'users': {1: {'id': 1}, 2: {'id': 2}}}
 
 
 def test_simple_int_id(root):
-    request = {'url': 'https://example.com/users/1'}
-    assert post(request, root) == {'id': 1}
+    assert post({'url': 'https://example.com/users/1'}, root) == {'id': 1}
     assert root == {'users': {1: {'id': 1}}}
+    assert post({'url': 'https://example.com/users'}, root) == {'id': 2}
+    assert root == {'users': {1: {'id': 1}, 2: {'id': 2}}}
 
 
 def test_simple_uuid(root):
-    request = {'url': 'https://example.com/users/7189100e-3a2f-4eec-842d-c3f3bc799906'}
-    assert post(request, root) == {'id': '7189100e-3a2f-4eec-842d-c3f3bc799906'}
-    assert root == {'users': {'7189100e-3a2f-4eec-842d-c3f3bc799906': {'id': '7189100e-3a2f-4eec-842d-c3f3bc799906'}}}
+    uuid_id = '7189100e-3a2f-4eec-842d-c3f3bc799906'
+    request = {'url': f'https://example.com/users/{uuid_id}'}
+    assert post(request, root) == {'id': uuid_id}
+    assert root == {'users': {uuid_id: {'id': uuid_id}}}
+    new_user = post({'url': 'https://example.com/users'}, root)
+    assert is_valid_uuid(new_user['id'])
+    assert root == {
+        'users': {
+            uuid_id: {'id': uuid_id},
+            new_user['id']: new_user
+        }
+    }
 
 
 def test_simple_child(root):

@@ -152,7 +152,12 @@ def handler(request, method, root=None):
             return items
         elif method in {'POST', 'PUT'}:
             ids = root[part].keys()
-            for i in itertools.count(1):
+            # Come up with new id
+            if not ids or type(list(ids)[0]) == int:
+                generator = itertools.count(1)
+            else:
+                generator = (str(uuid.uuid4()) for _ in itertools.count())
+            for i in generator:
                 if i not in ids:
                     body = request.get('body', {})
                     params = get_params(request)
