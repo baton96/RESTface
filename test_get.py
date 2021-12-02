@@ -134,3 +134,17 @@ def test_blank_param_no_field(empty_root):
         post({'url': url}, empty_root)
     request = {'url': 'https://example.com/users?is_odd'}
     assert get(request, empty_root) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]
+
+
+def test_sort_none(empty_root):
+    for i in range(1, 5):
+        url = f'https://example.com/users'
+        if i % 2:
+            url += f'?noneable={i}'
+        post({'url': url}, empty_root)
+    request = {'url': 'https://example.com/users?sort=noneable'}
+    assert get(request, empty_root) == [
+        {'id': 1, 'noneable': 1},
+        {'id': 3, 'noneable': 3},
+        {'id': 2}, {'id': 4}
+    ]

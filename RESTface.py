@@ -129,7 +129,9 @@ def handler(request, method, root=None):
                 params[parent_id_name] = parent_id
             if 'sort' in params:
                 desc = 'desc' in params
-                sort_by = operator.itemgetter(params['sort'])
+                sort_field = params['sort']
+                # Keep None but put it on the end of results
+                sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
                 items = sorted(items, key=sort_by, reverse=desc)
                 params.pop('sort', None)
             params.pop('desc', None)
