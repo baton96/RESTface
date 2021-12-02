@@ -112,23 +112,32 @@ def test_modify(root):
     assert root == {'users': {1: {'id': 1, 'a': 'c'}}}
 
 
-def test_param_types_bool(root):
-    request = {'url': 'https://example.com/users?big_true=True&small_true=true&big_false=False&small_false=false'}
+def test_param_types(root):
+    params = {
+        'int': '1',
+        'float': '0.5',
+        'str': 'value',
+        'big_true': 'True',
+        'small_true': 'true',
+        'big_false': 'False',
+        'small_false': 'false',
+        'none': 'none',
+        'null': 'null',
+        'empty': ''
+    }
+    params = '&'.join(f'{name}={value}' for name, value in params.items())
+    request = {'url': f'https://example.com/users?{params}'}
     post(request, root)
     assert root['users'][1] == {
         'id': 1,
+        'int': 1,
+        'float': 0.5,
+        'str': 'value',
         'big_true': True,
         'small_true': True,
         'big_false': False,
-        'small_false': False
-    }
-
-
-def test_param_types_none(root):
-    request = {'url': 'https://example.com/users?none=none&null=null'}
-    post(request, root)
-    assert root['users'][1] == {
-        'id': 1,
+        'small_false': False,
         'none': None,
-        'null': None
+        'null': None,
+        'empty': ''
     }
