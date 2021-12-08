@@ -127,7 +127,7 @@ def handler(request, method, root=None):
                 params[parent_id_name] = parent_id
 
             # Prepare for sorting
-            sort_field = params.pop('sort', None)
+            sort_field = params.pop('sort', 'id')
             desc = 'desc' in params
             params.pop('desc', None)
 
@@ -143,11 +143,9 @@ def handler(request, method, root=None):
                     op = lambda field, _: field
                 items = [item for item in items if op(item.get(field_name), param_value)]
 
-            # Sorting
-            if sort_field:
-                # Keep None but put it on the end of results
-                sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
-                items = sorted(items, key=sort_by, reverse=desc)
+            # Sorting, keep None but put it on the end of results
+            sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
+            items = sorted(items, key=sort_by, reverse=desc)
 
             return items
         elif method in {'POST', 'PUT'}:
