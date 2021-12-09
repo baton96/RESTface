@@ -153,3 +153,15 @@ def test_sort_none(empty_root):
         {'id': 3, 'noneable': 3},
         {'id': 2}, {'id': 4}
     ]
+
+
+def test_only_names(empty_root):
+    request = {'url': 'https://example.com/users/posts'}
+    assert get(request, empty_root) == []
+    assert empty_root == {'users': {}, 'posts': {}}
+
+
+def test_only_ids(root):
+    request = {'url': 'https://example.com/1/2'}
+    with pytest.raises(Exception):
+        get(request, root)

@@ -55,7 +55,9 @@ def create_subhierarchy(parts, root) -> dict:
         if part.isdigit() or is_valid_uuid(part):
             if part.isdigit():
                 part = int(part)
-            if part not in root[parts[i - 1]]:
+            if parts[i - 1] not in root:
+                raise Exception('Invalid path')
+            elif part not in root[parts[i - 1]]:
                 root[parts[i - 1]][part] = {'id': part, **parent_info}
             parent_info = {engine.singular_noun(parts[i - 1]) + '_id': part}
         # If part is collection name

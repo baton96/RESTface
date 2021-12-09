@@ -103,15 +103,6 @@ def test_modify_post(root):
     assert root == {'users': {1: {'id': 1, 'a': 'b', 'c': 'd'}}}
 
 
-def test_modify(root):
-    request = {'url': 'https://example.com/users/1?a=b'}
-    post(request, root)
-    assert root == {'users': {1: {'id': 1, 'a': 'b'}}}
-    request = {'url': 'https://example.com/users/1?a=c'}
-    post(request, root)
-    assert root == {'users': {1: {'id': 1, 'a': 'c'}}}
-
-
 def test_param_types(root):
     params = {
         'int': '1',
@@ -141,3 +132,24 @@ def test_param_types(root):
         'null': None,
         'empty': ''
     }
+
+
+# TODO
+'''
+def test_same_params(root):
+    request = {'url': 'https://example.com/users/1?a=b&a=c'}
+    post(request, root)
+    assert root == {'users': {1: {'id': 1, 'a': 'b'}}}
+'''
+
+
+def test_only_names(root):
+    request = {'url': 'https://example.com/users/posts'}
+    assert post(request, root) == {'id': 1}
+    assert root == {'users': {}, 'posts': {1: {'id': 1}}}
+
+
+def test_only_ids(root):
+    request = {'url': 'https://example.com/1/2'}
+    with pytest.raises(Exception):
+        post(request, root)
