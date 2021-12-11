@@ -38,7 +38,16 @@ def test_simple_uuid(root):
     }
 
 
-def test_simple_child(root):
+def test_simple_child_no_id(root):
+    request = {'url': 'https://example.com/users/1/posts'}
+    post(request)
+    assert root == {
+        'users': {1: {'id': 1}},
+        'posts': {1: {'id': 1, 'user_id': 1}}
+    }
+
+
+def test_simple_child_id(root):
     request = {'url': 'https://example.com/users/1/posts/2'}
     post(request)
     assert root == {

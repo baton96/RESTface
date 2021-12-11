@@ -10,6 +10,7 @@ def get_all_rows():
 @pytest.fixture
 def get_items():
     if storage_type == 'memory':
+        RESTface.root = {}
         return lambda: RESTface.root
     elif storage_type == 'db':
         return lambda: get_all_rows()

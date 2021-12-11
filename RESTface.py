@@ -2,10 +2,79 @@ import itertools
 import operator
 import re
 import uuid
+from abc import ABC
+from typing import Optional, Union
 from urllib import parse
 
-from inflect import engine
 import dataset
+from inflect import engine
+
+
+class Storage(ABC):
+    pass
+
+
+class MemoryStorage(Storage):
+    def get_with_id(self, collection_name: str, item_id: Union[int, str]):
+        collection = root[collection_name]
+        return [collection[item_id]]
+
+    def post(self, collection_name: str, data: Optional[dict] = None):
+        data = data or {}
+        collection = root[collection_name]
+        item_id = data.get('id') or self.generate_id(collection_name)
+        collection.setdefault(item_id, {}).update({'id': item_id, **data})
+        return item_id
+
+    def put(self, collection_name: str, data: Optional[dict] = None):
+        data = data or {}
+        collection = root[collection_name]
+        item_id = data.get('id') or self.generate_id(collection_name)
+        collection[item_id] = {'id': item_id, **data}
+        return item_id
+
+    def delete(self, collection_name: str, item_id: Optional[Union[int, str]] = None) -> bool:
+        if item_id:
+            collection = root[collection_name]
+            return bool(collection.pop(item_id, None))
+        else:
+            return bool(root.pop(collection_name, None))
+
+    def generate_id(self, collection_name: str):
+        ids = root[collection_name].keys()
+        if not ids or type(list(ids)[0]) == int:
+            generator = itertools.count(1)
+        else:
+            generator = (str(uuid.uuid4()) for _ in itertools.count())
+        for i in generator:
+            if i not in ids:
+                return i
+
+
+class DbStorage(Storage):
+    def get_with_id(self, table_name: str, item_id: Union[int, str]):
+        return db[table_name].find_one(id=item_id) or {}
+
+    def post(self, table_name: str, data: Optional[dict] = None):
+        data = data or {}
+        # existing -> True, nonexisting -> id
+        return db[table_name].upsert(data, ['id'])
+
+    def put(self, table_name: str, data: Optional[dict] = None):
+        data = data or {}
+        item_id = data.get('id')
+        db[table_name].delete(id=item_id)
+        # existing -> True, nonexisting -> id
+        return db[table_name].upsert(data, ['id'])
+
+    def delete(self, table_name: str, item_id: Optional[Union[int, str]] = None) -> bool:
+        if item_id:
+            existed = db[table_name].delete(id=item_id)
+            return existed
+        else:
+            existed = table_name in db.tables
+            db[table_name].drop()
+            return existed
 
 
 # TODO:
@@ -33,8 +102,9 @@ engine = engine()
 ops = get_ops()
 root = {}
 
+storage = MemoryStorage()
 if storage_type == 'db':
-    db = dataset.connect('sqlite:///:memory:')
+    db = dataset.connect('sqlite:///:memory:', row_type=dict)
 
 
 def is_float(element) -> bool:
@@ -66,10 +136,8 @@ def create_subhierarchy(parts) -> dict:
                 root[parts[i - 1]][part] = {'id': part, **parent_info}
             parent_info = {engine.singular_noun(parts[i - 1]) + '_id': part}
         # If part is collection name
-        else:
-            # If no such collection then create it
-            if part not in root:
-                root[part] = {}
+        elif part not in root:
+            root[part] = {}
     return parent_info
 
 
@@ -97,36 +165,30 @@ def get_params(request) -> dict:
 
 
 def handler(request, method):
-    parts = parse.urlsplit(request['url']).path.strip('/').split('/')
-    parent_info = create_subhierarchy(parts)
+    url_parts = parse.urlsplit(request['url']).path.strip('/').split('/')
+    parent_info = create_subhierarchy(url_parts)
 
-    part = parts[-1]
-    if part.isdigit() or is_valid_uuid(part):
-        if part.isdigit():
-            part = int(part)
-
-        if method == 'GET':
-            return [root[parts[-2]][part]]
-        elif method in {'POST', 'PUT'}:
-            body = request.get('body', {})
-            params = get_params(request)
-            if method == 'PUT' or part not in root[parts[-2]]:
-                root[parts[-2]][part] = {'id': part, **params, **body}
-            # If method is POST and part is in collection
-            else:
-                root[parts[-2]][part].update(**params, **body)
-            return part
-        elif method == 'DELETE':
-            return bool(root[parts[-2]].pop(part, None))
+    last_part = url_parts[-1]
+    if last_part.isdigit() or is_valid_uuid(last_part):
+        collection_name = str(url_parts[-2])
+        item_id = last_part
+        if item_id.isdigit():
+            item_id = int(item_id)
     else:
-        if method == 'GET':
-            items = list(root[part].values())
+        collection_name = str(last_part)
+        item_id = None
+
+    if method == 'GET':
+        if item_id:
+            return storage.get_with_id(collection_name, item_id)
+        else:
+            items = list(root[last_part].values())
             params = get_params(request)
 
             # Filter by parent_id
-            if len(parts) > 2:
-                parent_id_name = engine.singular_noun(parts[-3]) + '_id'
-                parent_id = parts[-2]
+            if len(url_parts) > 2:
+                parent_id_name = engine.singular_noun(url_parts[-3]) + '_id'
+                parent_id = url_parts[-2]
                 if parent_id.isdigit():
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
@@ -153,21 +215,19 @@ def handler(request, method):
             items = sorted(items, key=sort_by, reverse=desc)
 
             return items
-        elif method in {'POST', 'PUT'}:
-            ids = root[part].keys()
-            # Come up with new id
-            if not ids or type(list(ids)[0]) == int:
-                generator = itertools.count(1)
-            else:
-                generator = (str(uuid.uuid4()) for _ in itertools.count())
-            for i in generator:
-                if i not in ids:
-                    body = request.get('body', {})
-                    params = get_params(request)
-                    root[part][i] = {'id': i, **parent_info, **params, **body}
-                    return i
-        elif method == 'DELETE':
-            return bool(root.pop(part, None))
+    elif method in {'POST', 'PUT'}:
+        params = get_params(request)
+        body = request.get('body', {})
+        if item_id:
+            data = {'id': item_id, **params, **body}
+        else:
+            data = {**parent_info, **params, **body}
+        if method == 'POST':
+            return storage.post(collection_name, data)
+        else:
+            return storage.put(collection_name, data)
+    elif method == 'DELETE':
+        return storage.delete(collection_name, item_id)
 
 
 def post(request):
