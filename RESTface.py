@@ -1,7 +1,6 @@
 import itertools
 import operator
 import re
-import uuid
 from abc import ABC
 from typing import Optional, Union
 from urllib import parse
@@ -42,11 +41,7 @@ class MemoryStorage(Storage):
 
     def generate_id(self, collection_name: str):
         ids = root[collection_name].keys()
-        if not ids or type(list(ids)[0]) == int:
-            generator = itertools.count(1)
-        else:
-            generator = (str(uuid.uuid4()) for _ in itertools.count())
-        for i in generator:
+        for i in itertools.count(1):
             if i not in ids:
                 return i
 
@@ -83,6 +78,7 @@ class DbStorage(Storage):
 # autogenerate Swagger/OpenAPI specs
 # example app using RESTface
 # path of storage file json/sqlite
+# uuid
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
@@ -115,21 +111,12 @@ def is_float(element) -> bool:
         return False
 
 
-def is_valid_uuid(obj) -> bool:
-    try:
-        uuid.UUID(obj)
-        return True
-    except ValueError:
-        return False
-
-
 def create_subhierarchy(parts) -> dict:
     parent_info = {}
     for i, part in enumerate(parts):
         # If part is item id
-        if part.isdigit() or is_valid_uuid(part):
-            if part.isdigit():
-                part = int(part)
+        if part.isdigit():
+            part = int(part)
             if parts[i - 1] not in root:
                 raise Exception('Invalid path')
             elif part not in root[parts[i - 1]]:
@@ -169,11 +156,9 @@ def handler(request, method):
     parent_info = create_subhierarchy(url_parts)
 
     last_part = url_parts[-1]
-    if last_part.isdigit() or is_valid_uuid(last_part):
+    if last_part.isdigit():
         collection_name = str(url_parts[-2])
-        item_id = last_part
-        if item_id.isdigit():
-            item_id = int(item_id)
+        item_id = int(last_part)
     else:
         collection_name = str(last_part)
         item_id = None

@@ -1,6 +1,6 @@
 import pytest
 
-from RESTface import post, put, is_valid_uuid
+from RESTface import post, put
 import RESTface
 
 
@@ -21,21 +21,6 @@ def test_simple_int_id(root):
     assert root == {'users': {1: {'id': 1}}}
     assert post({'url': 'https://example.com/users'}) == 2
     assert root == {'users': {1: {'id': 1}, 2: {'id': 2}}}
-
-
-def test_simple_uuid(root):
-    uuid_id = '7189100e-3a2f-4eec-842d-c3f3bc799906'
-    request = {'url': f'https://example.com/users/{uuid_id}'}
-    assert post(request) == uuid_id
-    assert root == {'users': {uuid_id: {'id': uuid_id}}}
-    new_user_id = post({'url': 'https://example.com/users'})
-    assert is_valid_uuid(new_user_id)
-    assert root == {
-        'users': {
-            uuid_id: {'id': uuid_id},
-            new_user_id: {'id': new_user_id}
-        }
-    }
 
 
 def test_simple_child_no_id(root):
