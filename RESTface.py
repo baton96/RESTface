@@ -5,6 +5,7 @@ import uuid
 from urllib import parse
 
 from inflect import engine
+import dataset
 
 
 # TODO:
@@ -27,9 +28,13 @@ def get_ops() -> dict:
     return _ops
 
 
+storage_type = 'memory'  # db
 engine = engine()
 ops = get_ops()
-_root = {}
+root = {}
+
+if storage_type == 'db':
+    db = dataset.connect('sqlite:///:memory:')
 
 
 def is_float(element) -> bool:
@@ -48,7 +53,7 @@ def is_valid_uuid(obj) -> bool:
         return False
 
 
-def create_subhierarchy(parts, root) -> dict:
+def create_subhierarchy(parts) -> dict:
     parent_info = {}
     for i, part in enumerate(parts):
         # If part is item id
@@ -91,11 +96,9 @@ def get_params(request) -> dict:
     return params
 
 
-def handler(request, method, root=None):
-    if root is None:
-        root = _root
+def handler(request, method):
     parts = parse.urlsplit(request['url']).path.strip('/').split('/')
-    parent_info = create_subhierarchy(parts, root)
+    parent_info = create_subhierarchy(parts)
 
     part = parts[-1]
     if part.isdigit() or is_valid_uuid(part):
@@ -112,7 +115,7 @@ def handler(request, method, root=None):
             # If method is POST and part is in collection
             else:
                 root[parts[-2]][part].update(**params, **body)
-            return root[parts[-2]][part]
+            return part
         elif method == 'DELETE':
             return bool(root[parts[-2]].pop(part, None))
     else:
@@ -162,22 +165,22 @@ def handler(request, method, root=None):
                     body = request.get('body', {})
                     params = get_params(request)
                     root[part][i] = {'id': i, **parent_info, **params, **body}
-                    return root[part][i]
+                    return i
         elif method == 'DELETE':
             return bool(root.pop(part, None))
 
 
-def post(request, root=None):
-    return handler(request, 'POST', root)
+def post(request):
+    return handler(request, 'POST')
 
 
-def get(request, root=None):
-    return handler(request, 'GET', root)
+def get(request):
+    return handler(request, 'GET')
 
 
-def put(request, root=None):
-    return handler(request, 'PUT', root)
+def put(request):
+    return handler(request, 'PUT')
 
 
-def delete(request, root=None):
-    return handler(request, 'DELETE', root)
+def delete(request):
+    return handler(request, 'DELETE')
