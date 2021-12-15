@@ -32,7 +32,7 @@ def test_get_all(items):
 
 def test_get_by_id(items):
     request = {'url': 'https://example.com/users/1'}
-    assert get(request) == [{'id': 1}]
+    assert get(request) == {'id': 1}
     request = {'url': 'https://example.com/users?id=1'}
     assert get(request) == [{'id': 1}]
     request = {'url': 'https://example.com/users?id__eq=1'}
@@ -75,13 +75,13 @@ def test_simple_no_id():
 
 def test_simple_id():
     request = {'url': 'https://example.com/users/1'}
-    assert get(request) == [{'id': 1}]
+    assert get(request) == {'id': 1}
     assert get_items() == {'users': {1: {'id': 1}}}
 
 
 def test_simple_child():
     request = {'url': 'https://example.com/users/1/posts/2'}
-    assert get(request) == [{'id': 2, 'user_id': 1}]
+    assert get(request) == {'id': 2, 'user_id': 1}
     assert get_items() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1}}
@@ -90,7 +90,7 @@ def test_simple_child():
 
 def test_simple_deep():
     request = {'url': 'https://example.com/users/1/posts/2/comments/3'}
-    assert get(request) == [{'id': 3, 'post_id': 2}]
+    assert get(request) == {'id': 3, 'post_id': 2}
     assert get_items() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1}},

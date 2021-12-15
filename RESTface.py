@@ -2,7 +2,7 @@ import itertools
 import operator
 import re
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional
 from urllib import parse
 
 import dataset
@@ -14,9 +14,9 @@ class Storage(ABC):
 
 
 class MemoryStorage(Storage):
-    def get_with_id(self, collection_name: str, item_id: Union[int, str]):
+    def get_with_id(self, collection_name: str, item_id: int):
         collection = root[collection_name]
-        return [collection[item_id]]
+        return collection.get(item_id, {})
 
     def post(self, collection_name: str, data: Optional[dict] = None):
         data = data or {}
@@ -32,7 +32,7 @@ class MemoryStorage(Storage):
         collection[item_id] = {'id': item_id, **data}
         return item_id
 
-    def delete(self, collection_name: str, item_id: Optional[Union[int, str]] = None) -> bool:
+    def delete(self, collection_name: str, item_id: Optional[int] = None) -> bool:
         if item_id:
             collection = root[collection_name]
             return bool(collection.pop(item_id, None))
@@ -47,7 +47,7 @@ class MemoryStorage(Storage):
 
 
 class DbStorage(Storage):
-    def get_with_id(self, table_name: str, item_id: Union[int, str]):
+    def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 
     def post(self, table_name: str, data: Optional[dict] = None):
@@ -62,7 +62,7 @@ class DbStorage(Storage):
         # existing -> True, nonexisting -> id
         return db[table_name].upsert(data, ['id'])
 
-    def delete(self, table_name: str, item_id: Optional[Union[int, str]] = None) -> bool:
+    def delete(self, table_name: str, item_id: Optional[int] = None) -> bool:
         if item_id:
             existed = db[table_name].delete(id=item_id)
             return existed
@@ -79,6 +79,7 @@ class DbStorage(Storage):
 # example app using RESTface
 # path of storage file json/sqlite
 # uuid
+# remove creating on get?
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
