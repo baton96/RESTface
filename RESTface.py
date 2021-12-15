@@ -14,6 +14,10 @@ class Storage(ABC):
 
 
 class MemoryStorage(Storage):
+    def create_if_not_exists(self, collection_name: str):
+        if collection_name not in root:
+            root[collection_name] = {}
+
     def get_with_id(self, collection_name: str, item_id: int):
         collection = root.get(collection_name, {})
         return collection.get(item_id, {})
@@ -47,6 +51,9 @@ class MemoryStorage(Storage):
 
 
 class DbStorage(Storage):
+    def create_if_not_exists(self, table_name: str):
+        _ = db[table_name].table
+
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 
@@ -60,7 +67,7 @@ class DbStorage(Storage):
         item_id = data.get('id')
         db[table_name].delete(id=item_id)
         # existing -> True, nonexisting -> id
-        return db[table_name].upsert(data, ['id'])
+        return db[table_name].insert(data)
 
     def delete(self, table_name: str, item_id: Optional[int] = None) -> bool:
         if item_id:
@@ -98,9 +105,11 @@ engine = engine()
 ops = get_ops()
 root = {}
 
-storage = MemoryStorage()
+if storage_type == 'memory':
+    storage = MemoryStorage()
 if storage_type == 'db':
     db = dataset.connect('sqlite:///:memory:', row_type=dict)
+    storage = DbStorage()
 
 
 def is_float(element) -> bool:
@@ -111,20 +120,36 @@ def is_float(element) -> bool:
         return False
 
 
+# TODO: Not used anywhere
+def get_parents_info(url_parts):
+    offset = int(url_parts[-1].isdigit())
+    if len(url_parts) > 2 + offset:
+        collection_name = url_parts[-3 - offset]
+        if collection_name not in root:
+            root[collection_name] = {}
+        parent_id_name = engine.singular_noun(collection_name) + '_id'
+        parent_id = int(url_parts[-2 - offset])
+        return {parent_id_name: parent_id}
+    else:
+        return {}
+
+
 def create_subhierarchy(parts) -> dict:
     parent_info = {}
     for i, part in enumerate(parts):
-        # If part is item id
         if part.isdigit():
-            part = int(part)
-            if parts[i - 1] not in root:
+            item_id = int(part)
+            data = {'id': item_id, **parent_info}
+
+            collection_name = parts[i - 1]
+            if collection_name.isdigit():
                 raise Exception('Invalid path')
-            elif part not in root[parts[i - 1]]:
-                root[parts[i - 1]][part] = {'id': part, **parent_info}
-            parent_info = {engine.singular_noun(parts[i - 1]) + '_id': part}
-        # If part is collection name
-        elif part not in root:
-            root[part] = {}
+
+            storage.post(collection_name, data)
+            parent_info = {engine.singular_noun(parts[i - 1]) + '_id': item_id}
+        else:
+            collection_name = part
+            storage.create_if_not_exists(collection_name)
     return parent_info
 
 

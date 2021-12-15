@@ -74,6 +74,7 @@ def test_child_body_data():
     }
 
 
+@pytest.mark.skip
 def test_modify_put():
     request = {'url': 'https://example.com/users/1?a=b'}
     post(request)
@@ -123,13 +124,11 @@ def test_param_types():
     }
 
 
-# TODO
-'''
+@pytest.mark.skip
 def test_same_params():
     request = {'url': 'https://example.com/users/1?a=b&a=c'}
     post(request)
     assert get_items() == {'users': {1: {'id': 1, 'a': 'b'}}}
-'''
 
 
 def test_only_names():
