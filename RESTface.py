@@ -22,6 +22,9 @@ class MemoryStorage(Storage):
         collection = root.get(collection_name, {})
         return collection.get(item_id, {})
 
+    def get_without_id(self, collection_name):
+        return list(root.get(collection_name, {}).values())
+
     def post(self, collection_name: str, data: Optional[dict] = None):
         data = data or {}
         collection = root[collection_name]
@@ -56,6 +59,9 @@ class DbStorage(Storage):
 
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
+
+    def get_without_id(self, table_name):
+        return db[table_name].all()
 
     def post(self, table_name: str, data: Optional[dict] = None):
         data = data or {}
@@ -190,7 +196,7 @@ def handler(request, method):
         if item_id:
             return storage.get_with_id(collection_name, item_id)
         else:
-            items = list(root.get(last_part, {}).values())
+            items = storage.get_without_id(collection_name)
             if not items:
                 return []
 

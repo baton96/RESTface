@@ -101,15 +101,14 @@ def test_blank_param_no_field():
 
 def test_sort_none():
     for i in range(1, 5):
-        url = f'https://example.com/users'
-        if i % 2:
-            url += f'?noneable={i}'
+        url = f'https://example.com/users?noneable={i if i % 2 else None}'
         post({'url': url})
     request = {'url': 'https://example.com/users?sort=noneable'}
     assert get(request) == [
         {'id': 1, 'noneable': 1},
         {'id': 3, 'noneable': 3},
-        {'id': 2}, {'id': 4}
+        {'id': 2, 'noneable': None},
+        {'id': 4, 'noneable': None},
     ]
 
 
