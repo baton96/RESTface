@@ -15,7 +15,7 @@ class Storage(ABC):
 
 class MemoryStorage(Storage):
     def get_with_id(self, collection_name: str, item_id: int):
-        collection = root[collection_name]
+        collection = root.get(collection_name, {})
         return collection.get(item_id, {})
 
     def post(self, collection_name: str, data: Optional[dict] = None):
@@ -79,7 +79,6 @@ class DbStorage(Storage):
 # example app using RESTface
 # path of storage file json/sqlite
 # uuid
-# remove creating on get?
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
@@ -154,8 +153,6 @@ def get_params(request) -> dict:
 
 def handler(request, method):
     url_parts = parse.urlsplit(request['url']).path.strip('/').split('/')
-    parent_info = create_subhierarchy(url_parts)
-
     last_part = url_parts[-1]
     if last_part.isdigit():
         collection_name = str(url_parts[-2])
@@ -168,7 +165,10 @@ def handler(request, method):
         if item_id:
             return storage.get_with_id(collection_name, item_id)
         else:
-            items = list(root[last_part].values())
+            items = list(root.get(last_part, {}).values())
+            if not items:
+                return []
+
             params = get_params(request)
 
             # Filter by parent_id
@@ -202,6 +202,7 @@ def handler(request, method):
 
             return items
     elif method in {'POST', 'PUT'}:
+        parent_info = create_subhierarchy(url_parts)
         params = get_params(request)
         body = request.get('body', {})
         if item_id:

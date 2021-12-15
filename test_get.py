@@ -1,7 +1,6 @@
 import pytest
 
 from RESTface import get, post
-from conftest import get_items
 
 
 @pytest.fixture
@@ -67,37 +66,6 @@ def test_children_custom(items_with_children):
     assert get(request) == [{'id': 1, 'user_id': 1}]
 
 
-def test_simple_no_id():
-    request = {'url': 'https://example.com/users'}
-    assert get(request) == []
-    assert get_items() == {'users': {}}
-
-
-def test_simple_id():
-    request = {'url': 'https://example.com/users/1'}
-    assert get(request) == {'id': 1}
-    assert get_items() == {'users': {1: {'id': 1}}}
-
-
-def test_simple_child():
-    request = {'url': 'https://example.com/users/1/posts/2'}
-    assert get(request) == {'id': 2, 'user_id': 1}
-    assert get_items() == {
-        'users': {1: {'id': 1}},
-        'posts': {2: {'id': 2, 'user_id': 1}}
-    }
-
-
-def test_simple_deep():
-    request = {'url': 'https://example.com/users/1/posts/2/comments/3'}
-    assert get(request) == {'id': 3, 'post_id': 2}
-    assert get_items() == {
-        'users': {1: {'id': 1}},
-        'posts': {2: {'id': 2, 'user_id': 1}},
-        'comments': {3: {'id': 3, 'post_id': 2}},
-    }
-
-
 def test_sort(items_unsorted):
     request = {'url': 'https://example.com/users?sort=id'}
     assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
@@ -148,10 +116,8 @@ def test_sort_none():
 def test_only_names():
     request = {'url': 'https://example.com/users/posts'}
     assert get(request) == []
-    assert get_items() == {'users': {}, 'posts': {}}
 
 
 def test_only_ids(items):
     request = {'url': 'https://example.com/1/2'}
-    with pytest.raises(Exception):
-        get(request)
+    assert get(request) == {}
