@@ -197,7 +197,7 @@ def handler(request, method):
                 items = [item for item in items if op(item.get(field_name), param_value)]
 
             # Sorting, keep None but put it on the end of results
-            sort_by = lambda item: ((value := item.get(sort_field)) is None, value)
+            sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
             items = sorted(items, key=sort_by, reverse=desc)
 
             return items

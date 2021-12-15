@@ -78,7 +78,7 @@ def test_sort_desc(items_unsorted):
 
 def test_sort_blank(items_unsorted):
     request = {'url': 'https://example.com/users?sort'}
-    assert get(request) == [{'id': i} for i in [21, 3, 19, 37, 28]]
+    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
 
 
 def test_blank_param():
