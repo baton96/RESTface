@@ -22,14 +22,21 @@ class MemoryStorage(Storage):
         collection = root.get(collection_name, {})
         return collection.get(item_id, {})
 
-    def get_without_id(self, collection_name: str, params: list):
+    def get_without_id(self, collection_name: str, where_params: list, meta_params: dict):
         items = list(root.get(collection_name, {}).values())
         items = [
             item for item in items if all(
                 self.fulfill_cond(item, param)
-                for param in params
+                for param in where_params
             )
         ]
+
+        # Sorting, keep None-s but put them on the end of results
+        sort_field = meta_params['sort_field']
+        sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
+
+        desc = meta_params['desc']
+        items = sorted(items, key=sort_by, reverse=desc)
         return items
 
 
@@ -146,7 +153,7 @@ def get_ops() -> dict:
     return _ops
 
 
-storage_type = 'db'  # db
+storage_type = 'memory'  # memory / db
 engine = engine()
 ops = get_ops()
 root = {}
@@ -238,7 +245,10 @@ def handler(request, method):
         else:
             params = get_params(request)
             sort_field = params.pop('sort', 'id')
-            desc = ('desc' in params) or sort_field.startswith('-')
+            meta_params = {
+                'sort_field': sort_field.lstrip('-'),
+                'desc': ('desc' in params) or sort_field.startswith('-'),
+            }
             params.pop('desc', None)
 
             # Filter by parent_id
@@ -249,7 +259,7 @@ def handler(request, method):
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
 
-            parsed_params = []
+            where_params = []
             # Filtering by other fields
             for param_name, param_value in params.items():
                 if '__' in param_name:
@@ -258,13 +268,9 @@ def handler(request, method):
                     op_name = '='
                 if op_name in {'between', 'notin', 'in'}:
                     param_value = re.split(", ?", param_value.strip('({[]})'))
-                parsed_params += [[op_name, param_name, param_value]]
+                where_params += [[op_name, param_name, param_value]]
 
-            items = storage.get_without_id(collection_name, parsed_params)
-
-            # Sorting, keep None-s but put them on the end of results
-            sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
-            items = sorted(items, key=sort_by, reverse=desc)
+            items = storage.get_without_id(collection_name, where_params, meta_params)
             return items
 
     elif method in {'POST', 'PUT'}:
