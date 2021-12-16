@@ -232,7 +232,8 @@ def get_params(request) -> dict:
 
 
 def handler(request, method):
-    url_parts = parse.urlsplit(request['url']).path.strip('/').split('/')
+    path = parse.urlsplit(request['url']).path
+    url_parts = re.sub(r'^\d+', '', path).strip('/').split('/')
     last_part = url_parts[-1]
     if last_part.isdigit():
         collection_name = str(url_parts[-2])

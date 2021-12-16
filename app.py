@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
-from RESTface import handler
+from RESTface import handler, root
+
+from http import HTTPStatus
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-root = {}
 
 
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -15,7 +16,5 @@ def index(path=None):
         return '', 404
     else:
         body = request.get_json(force=True, silent=True) or {}
-        result = handler({'url': path, 'body': body}, request.method, root)
-        if request.method == 'DELETE':
-            return '', 204 if result else 404
+        result = handler({'url': path, 'body': body}, request.method)
     return jsonify(result)
