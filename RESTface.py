@@ -92,6 +92,9 @@ class DbStorage(Storage):
 # example app using RESTface
 # path of storage file json/sqlite
 # uuid
+# limit
+# offset
+# sort by two criteria
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
@@ -99,10 +102,19 @@ def get_ops() -> dict:
         op_name: operator.__getattribute__(op_name)
         for op_name in op_names
     }
-    _ops['in'] = lambda a, b: str(a) in re.split(", ?", b.strip('({[]})'))
-    _ops['gte'] = operator.ge
-    _ops['lte'] = operator.le
-    _ops['neq'] = operator.ne
+    _ops.update({
+        'between': lambda item, collection: (scope := re.split(", ?", collection.strip('({[]})')))[0] <= item <= scope[-1],
+        'notin': lambda item, collection: str(item) not in re.split(", ?", collection.strip('({[]})')),
+        'in': lambda item, collection: str(item) in re.split(", ?", collection.strip('({[]})')),
+        'ilike': lambda string, pattern: re.search(pattern, str(string).lower()),
+        'like': lambda string, pattern: re.search(pattern, str(string)),
+        'startswith': lambda string, pattern: str(string).startswith(pattern),
+        'endswith': lambda string, pattern: str(string).endswith(pattern),
+        'gte': operator.ge,
+        'lte': operator.le,
+        'neq': operator.ne,
+        'not': operator.ne,
+    })
     return _ops
 
 
