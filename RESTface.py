@@ -95,6 +95,7 @@ class DbStorage(Storage):
 # limit
 # offset
 # sort by two criteria
+# multiple op on same param
 
 def get_ops() -> dict:
     op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
@@ -213,6 +214,9 @@ def handler(request, method):
                 return []
 
             params = get_params(request)
+            sort_field = params.pop('sort', 'id')
+            desc = ('desc' in params) or sort_field.startswith('-')
+            params.pop('desc', None)
 
             # Filter by parent_id
             if len(url_parts) > 2:
@@ -222,28 +226,37 @@ def handler(request, method):
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
 
-            # Prepare for sorting
-            sort_field = params.pop('sort', 'id')
-            desc = 'desc' in params
-            params.pop('desc', None)
+            if storage_type == 'memory':
+                parsed_params = []
+                # Filtering by other fields
+                for param_name, param_value in params.items():
+                    # Equality is the default comparision method
+                    if '__' not in param_name:
+                        param_name = f'{param_name}__eq'
+                    field_name, op_name = param_name.split('__')
+                    op = ops[op_name]
+                    # Handle blank parameters
+                    if not param_value:
+                        op = lambda field, _: field
+                    items = [item for item in items if op(item.get(field_name), param_value)]
 
-            # Filtering by other fields
-            for param_name, param_value in params.items():
-                # Equality is the default comparision method
-                if '__' not in param_name:
-                    param_name = f'{param_name}__eq'
-                field_name, op_name = param_name.split('__')
-                op = ops[op_name]
-                # Handle blank parameters
-                if not param_value:
-                    op = lambda field, _: field
-                items = [item for item in items if op(item.get(field_name), param_value)]
+                # Sorting, keep None but put it on the end of results
+                sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
+                items = sorted(items, key=sort_by, reverse=desc)
+                return items
 
-            # Sorting, keep None but put it on the end of results
-            sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
-            items = sorted(items, key=sort_by, reverse=desc)
+            if storage_type == 'db':
+                parsed_params = {}
+                for param_name, param_value in params.items():
+                    if '__' not in param_name:
+                        param_name = f'{param_name}__eq'
+                    field_name, op_name = param_name.split('__')
+                    if op_name in {'between', 'notin', 'in'}:
+                        param_value = re.split(", ?", param_value.strip('({[]})'))
+                    parsed_params[field_name] = {op_name: param_value}
+                items = list(db[collection_name].find(**parsed_params))
+                print(parsed_params, items)
 
-            return items
     elif method in {'POST', 'PUT'}:
         parent_info = create_subhierarchy(url_parts)
         params = get_params(request)
