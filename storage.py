@@ -4,37 +4,32 @@ import re
 from typing import Optional
 import dataset
 
-
-def get_ops() -> dict:
-    op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
-    _ops = {
-        # op_name: getattr(operator, op_name)
-        op_name: operator.__getattribute__(op_name)
-        for op_name in op_names
-    }
-    _ops.update({
-        'between': lambda item, collection: collection[0] <= item <= collection[-1],
-        'ilike': lambda string, pattern: re.search(pattern, str(string).lower()),
-        'like': lambda string, pattern: re.search(pattern, str(string)),
-        'startswith': lambda string, pattern: str(string).startswith(pattern),
-        'endswith': lambda string, pattern: str(string).endswith(pattern),
-        'notin': lambda item, collection: str(item) not in collection,
-        'in': lambda item, collection: str(item) in collection,
-        'gte': operator.ge,
-        'lte': operator.le,
-        'neq': operator.ne,
-        'not': operator.ne,
-        '=': operator.eq,
-    })
-    return _ops
-
-
-ops = get_ops()
 root = {}
 db = {}
 
 
 class MemoryStorage:
+    def __init__(self):
+        op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
+        self.ops = {
+            op_name: getattr(operator, op_name)
+            for op_name in op_names
+        }
+        self.ops.update({
+            'between': lambda item, collection: collection[0] <= item <= collection[-1],
+            'ilike': lambda string, pattern: re.search(pattern, str(string).lower()),
+            'like': lambda string, pattern: re.search(pattern, str(string)),
+            'startswith': lambda string, pattern: str(string).startswith(pattern),
+            'endswith': lambda string, pattern: str(string).endswith(pattern),
+            'notin': lambda item, collection: str(item) not in collection,
+            'in': lambda item, collection: str(item) in collection,
+            'gte': operator.ge,
+            'lte': operator.le,
+            'neq': operator.ne,
+            'not': operator.ne,
+            '=': operator.eq,
+        })
+
     def create_if_not_exists(self, collection_name: str):
         if collection_name not in root:
             root[collection_name] = {}
@@ -93,7 +88,7 @@ class MemoryStorage:
     def fulfill_cond(self, item, parsed_param):
         op_name, param_name, param_value = parsed_param
         if param_value:
-            op = ops[op_name]
+            op = self.ops[op_name]
         else:
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
