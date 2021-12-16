@@ -63,12 +63,14 @@ def test_children_custom(items_with_children):
 
 
 def test_sort(items_unsorted):
-    request = {'url': 'https://example.com/users?sort=id'}
+    request = {'url': 'https://example.com/users?order_by=id'}
     assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
 
 
 def test_sort_desc(items_unsorted):
-    request = {'url': 'https://example.com/users?sort=id&desc'}
+    request = {'url': 'https://example.com/users?order_by=id&desc'}
+    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
+    request = {'url': 'https://example.com/users?desc'}
     assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
 
 
@@ -101,12 +103,12 @@ def test_sort_none():
     for i in range(1, 5):
         url = f'https://example.com/users?noneable={i if i % 2 else None}'
         post({'url': url})
-    request = {'url': 'https://example.com/users?sort=noneable'}
+    request = {'url': 'https://example.com/users?order_by=noneable'}
     assert get(request) == [
-        {'id': 1, 'noneable': 1},
-        {'id': 3, 'noneable': 3},
         {'id': 2, 'noneable': None},
         {'id': 4, 'noneable': None},
+        {'id': 1, 'noneable': 1},
+        {'id': 3, 'noneable': 3},
     ]
 
 

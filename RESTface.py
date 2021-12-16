@@ -31,12 +31,12 @@ class MemoryStorage(Storage):
             )
         ]
 
-        # Sorting, keep None-s but put them on the end of results
-        sort_field = meta_params['sort_field']
-        sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
+        # Sorting, keep None-s and put them on the beginning of results
+        order_by = meta_params['order_by']
+        order_key = lambda item: ((value := item.get(order_by)) is not None, value, item['id'])
 
         desc = meta_params['desc']
-        items = sorted(items, key=sort_by, reverse=desc)
+        items = sorted(items, key=order_key, reverse=desc)
         return items
 
 
@@ -83,17 +83,17 @@ class DbStorage(Storage):
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 
-    def get_without_id(self, table_name: str, params: list):
-        items = list(
-            db[table_name].find(
-                **{
-                    param_name: (
-                        {op_name: param_value} if param_value else {'not': None}
-                    )
-                    for op_name, param_name, param_value in params
-                }
+    def get_without_id(self, table_name: str, where_params: list, meta_params: dict):
+        where_params = {
+            param_name: (
+                {op_name: param_value} if param_value else {'not': None}
             )
-        )
+            for op_name, param_name, param_value in where_params
+        }
+        if meta_params.pop('desc', False):
+            meta_params['order_by'] = '-' + meta_params['order_by']
+        params = {**where_params, **meta_params}
+        items = list(db[table_name].find(**params))
         return items
 
     def post(self, table_name: str, data: Optional[dict] = None):
@@ -244,10 +244,10 @@ def handler(request, method):
             return storage.get_with_id(collection_name, item_id)
         else:
             params = get_params(request)
-            sort_field = params.pop('sort', 'id')
+            order_by = params.pop('order_by', None) or params.pop('sort', None) or 'id'
             meta_params = {
-                'sort_field': sort_field.lstrip('-'),
-                'desc': ('desc' in params) or sort_field.startswith('-'),
+                'order_by': order_by.lstrip('-'),
+                'desc': ('desc' in params) or order_by.startswith('-'),
             }
             params.pop('desc', None)
 
