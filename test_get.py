@@ -112,6 +112,16 @@ def test_sort_none():
     ]
 
 
+def test_offset(items):
+    request = {'url': 'https://example.com/users?offset=1'}
+    assert get(request) == [{'id': i} for i in range(2, 5)]
+
+
+def test_offset_limit(items):
+    request = {'url': 'https://example.com/users?offset=1&limit=2'}
+    assert get(request) == [{'id': i} for i in range(2, 4)]
+
+
 def test_only_names():
     request = {'url': 'https://example.com/users/posts'}
     assert get(request) == []

@@ -37,8 +37,10 @@ class MemoryStorage(Storage):
 
         desc = meta_params['desc']
         items = sorted(items, key=order_key, reverse=desc)
-        return items
 
+        offset = meta_params['_offset']
+        limit = meta_params['_limit'] or len(items) - offset
+        return items[offset: offset + limit]
 
     def post(self, collection_name: str, data: Optional[dict] = None):
         data = data or {}
@@ -92,6 +94,8 @@ class DbStorage(Storage):
         }
         if meta_params.pop('desc', False):
             meta_params['order_by'] = '-' + meta_params['order_by']
+        if not meta_params['_limit']:
+            meta_params.pop('_limit', None)
         params = {**where_params, **meta_params}
         items = list(db[table_name].find(**params))
         return items
@@ -125,8 +129,6 @@ class DbStorage(Storage):
 # example app using RESTface
 # path of storage file json/sqlite
 # uuid
-# limit
-# offset
 # sort by two criteria
 # multiple op on same param
 
@@ -248,6 +250,8 @@ def handler(request, method):
             meta_params = {
                 'order_by': order_by.lstrip('-'),
                 'desc': ('desc' in params) or order_by.startswith('-'),
+                '_limit': params.pop("limit", None),
+                '_offset': params.pop("offset", 0)
             }
             params.pop('desc', None)
 
