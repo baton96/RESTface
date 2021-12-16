@@ -22,8 +22,16 @@ class MemoryStorage(Storage):
         collection = root.get(collection_name, {})
         return collection.get(item_id, {})
 
-    def get_without_id(self, collection_name):
-        return list(root.get(collection_name, {}).values())
+    def get_without_id(self, collection_name: str, params: list):
+        items = list(root.get(collection_name, {}).values())
+        items = [
+            item for item in items if all(
+                self.fulfill_cond(item, param)
+                for param in params
+            )
+        ]
+        return items
+
 
     def post(self, collection_name: str, data: Optional[dict] = None):
         data = data or {}
@@ -52,6 +60,14 @@ class MemoryStorage(Storage):
             if i not in ids:
                 return i
 
+    def fulfill_cond(self, item, parsed_param):
+        op_name, param_name, param_value = parsed_param
+        if param_value:
+            op = ops[op_name]
+        else:
+            op = lambda field, _: field is not None
+        return op(item.get(param_name), param_value)
+
 
 class DbStorage(Storage):
     def create_if_not_exists(self, table_name: str):
@@ -60,8 +76,18 @@ class DbStorage(Storage):
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 
-    def get_without_id(self, table_name):
-        return db[table_name].all()
+    def get_without_id(self, table_name: str, params: list):
+        items = list(
+            db[table_name].find(
+                **{
+                    param_name: (
+                        {op_name: param_value} if param_value else {'not': None}
+                    )
+                    for op_name, param_name, param_value in params
+                }
+            )
+        )
+        return items
 
     def post(self, table_name: str, data: Optional[dict] = None):
         data = data or {}
@@ -104,22 +130,23 @@ def get_ops() -> dict:
         for op_name in op_names
     }
     _ops.update({
-        'between': lambda item, collection: (scope := re.split(", ?", collection.strip('({[]})')))[0] <= item <= scope[-1],
-        'notin': lambda item, collection: str(item) not in re.split(", ?", collection.strip('({[]})')),
-        'in': lambda item, collection: str(item) in re.split(", ?", collection.strip('({[]})')),
+        'between': lambda item, collection: collection[0] <= item <= collection[-1],
         'ilike': lambda string, pattern: re.search(pattern, str(string).lower()),
         'like': lambda string, pattern: re.search(pattern, str(string)),
         'startswith': lambda string, pattern: str(string).startswith(pattern),
         'endswith': lambda string, pattern: str(string).endswith(pattern),
+        'notin': lambda item, collection: str(item) not in collection,
+        'in': lambda item, collection: str(item) in collection,
         'gte': operator.ge,
         'lte': operator.le,
         'neq': operator.ne,
         'not': operator.ne,
+        '=': operator.eq,
     })
     return _ops
 
 
-storage_type = 'memory'  # db
+storage_type = 'db'  # db
 engine = engine()
 ops = get_ops()
 root = {}
@@ -209,10 +236,6 @@ def handler(request, method):
         if item_id:
             return storage.get_with_id(collection_name, item_id)
         else:
-            items = storage.get_without_id(collection_name)
-            if not items:
-                return []
-
             params = get_params(request)
             sort_field = params.pop('sort', 'id')
             desc = ('desc' in params) or sort_field.startswith('-')
@@ -226,36 +249,23 @@ def handler(request, method):
                     parent_id = int(parent_id)
                 params[parent_id_name] = parent_id
 
-            if storage_type == 'memory':
-                parsed_params = []
-                # Filtering by other fields
-                for param_name, param_value in params.items():
-                    # Equality is the default comparision method
-                    if '__' not in param_name:
-                        param_name = f'{param_name}__eq'
-                    field_name, op_name = param_name.split('__')
-                    op = ops[op_name]
-                    # Handle blank parameters
-                    if not param_value:
-                        op = lambda field, _: field
-                    items = [item for item in items if op(item.get(field_name), param_value)]
+            parsed_params = []
+            # Filtering by other fields
+            for param_name, param_value in params.items():
+                if '__' in param_name:
+                    param_name, op_name = param_name.split('__')
+                else:
+                    op_name = '='
+                if op_name in {'between', 'notin', 'in'}:
+                    param_value = re.split(", ?", param_value.strip('({[]})'))
+                parsed_params += [[op_name, param_name, param_value]]
 
-                # Sorting, keep None but put it on the end of results
-                sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
-                items = sorted(items, key=sort_by, reverse=desc)
-                return items
+            items = storage.get_without_id(collection_name, parsed_params)
 
-            if storage_type == 'db':
-                parsed_params = {}
-                for param_name, param_value in params.items():
-                    if '__' not in param_name:
-                        param_name = f'{param_name}__eq'
-                    field_name, op_name = param_name.split('__')
-                    if op_name in {'between', 'notin', 'in'}:
-                        param_value = re.split(", ?", param_value.strip('({[]})'))
-                    parsed_params[field_name] = {op_name: param_value}
-                items = list(db[collection_name].find(**parsed_params))
-                print(parsed_params, items)
+            # Sorting, keep None-s but put them on the end of results
+            sort_by = lambda item: ((value := item.get(sort_field)) is None, value, item['id'])
+            items = sorted(items, key=sort_by, reverse=desc)
+            return items
 
     elif method in {'POST', 'PUT'}:
         parent_info = create_subhierarchy(url_parts)

@@ -34,14 +34,10 @@ def test_get_by_id(items):
     assert get(request) == {'id': 1}
     request = {'url': 'https://example.com/users?id=1'}
     assert get(request) == [{'id': 1}]
-    request = {'url': 'https://example.com/users?id__eq=1'}
-    assert get(request) == [{'id': 1}]
 
 
 def test_lte(items):
     request = {'url': 'https://example.com/users?id__lt=3'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
-    request = {'url': 'https://example.com/users?id__le=2'}
     assert get(request) == [{'id': 1}, {'id': 2}]
     request = {'url': 'https://example.com/users?id__lte=2'}
     assert get(request) == [{'id': 1}, {'id': 2}]
@@ -83,10 +79,12 @@ def test_sort_blank(items_unsorted):
 
 def test_blank_param():
     for i in range(1, 5):
-        url = f'https://example.com/users?is_odd={i % 2}'
+        url = 'https://example.com/users'
+        if i % 2:
+            url += f'?is_odd={bool(i % 3)}'
         post({'url': url})
     request = {'url': 'https://example.com/users?is_odd'}
-    assert get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]
+    assert get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': False}]
 
 
 def test_blank_param_no_field():
