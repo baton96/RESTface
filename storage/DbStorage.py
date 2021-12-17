@@ -1,6 +1,6 @@
 from typing import Optional
-import dataset
 
+import dataset
 
 db = {}
 

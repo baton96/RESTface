@@ -1,6 +1,7 @@
-from storage import DbStorage, MemoryStorage
-import RESTface
 import pytest
+
+import RESTface
+from storage import DbStorage, MemoryStorage
 
 storage_type = 'db'
 face = RESTface.RESTface(storage_type)

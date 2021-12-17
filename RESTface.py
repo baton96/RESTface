@@ -2,8 +2,10 @@ import re
 from urllib import parse
 
 from inflect import engine
+
 from storage.DbStorage import DbStorage
 from storage.MemoryStorage import MemoryStorage
+
 
 # TODO:
 # memory, sqlite, fs
@@ -14,8 +16,6 @@ from storage.MemoryStorage import MemoryStorage
 # uuid
 # sort by two criteria
 # multiple op on same param
-
-
 
 
 def is_float(element) -> bool:

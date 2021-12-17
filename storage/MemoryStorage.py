@@ -3,7 +3,6 @@ import operator
 import re
 from typing import Optional
 
-
 root = {}
 
 

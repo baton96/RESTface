@@ -1,5 +1,6 @@
-from conftest import get_items, post
 import pytest
+
+from conftest import get_items, post
 
 
 def test_simple_no_id():

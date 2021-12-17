@@ -7,6 +7,7 @@ restface is a Python tool that provides minimal viable REST API
 ```pip install restface```
 
 ## Usage
+
 ```
 restface [-h] -p PORT -h HOST -d DEBUG
 

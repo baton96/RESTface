@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
-from RESTface import handler, root
 
-from http import HTTPStatus
+from RESTface import handler, root
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True

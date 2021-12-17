@@ -1,5 +1,6 @@
-from conftest import get, post
 import pytest
+
+from conftest import get, post
 
 
 @pytest.fixture
