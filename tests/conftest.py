@@ -1,5 +1,4 @@
-import MemoryStorage
-import DbStorage
+from storage import DbStorage, MemoryStorage
 import RESTface
 import pytest
 
