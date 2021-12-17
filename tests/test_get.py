@@ -1,6 +1,5 @@
+from conftest import get, post
 import pytest
-
-from RESTface import get, post
 
 
 @pytest.fixture

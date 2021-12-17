@@ -1,6 +1,4 @@
-from RESTface import post, delete
-from conftest import get_items
-
+from conftest import get_items, post, delete
 
 def test_delete_one_existing():
     request = {'url': 'https://example.com/users/1'}

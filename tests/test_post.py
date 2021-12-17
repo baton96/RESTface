@@ -1,6 +1,5 @@
+from conftest import get_items, post
 import pytest
-from RESTface import post, put
-from conftest import get_items
 
 
 def test_simple_no_id():

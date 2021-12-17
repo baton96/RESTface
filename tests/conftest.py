@@ -1,20 +1,24 @@
-import storage
+import MemoryStorage
+import DbStorage
+import RESTface
 import pytest
 
-storage_type = 'memory'
+storage_type = 'db'
+face = RESTface.RESTface(storage_type)
+get, post, delete = face.get, face.post, face.delete
 
 
 @pytest.fixture(autouse=True)
 def reset():
     if storage_type == 'memory':
-        storage.root = {}
+        MemoryStorage.root = {}
     elif storage_type == 'db':
-        for table in storage.db.tables:
-            storage.db[table].drop()
+        for table in DbStorage.db.tables:
+            DbStorage.db[table].drop()
 
 
 def get_items():
     if storage_type == 'memory':
-        return storage.root
+        return MemoryStorage.root
     elif storage_type == 'db':
-        return {table: {row['id']: row for row in storage.db[table].all()} for table in storage.db.tables}
+        return {table: {row['id']: row for row in DbStorage.db[table].all()} for table in DbStorage.db.tables}
