@@ -1,6 +1,6 @@
 # 😴 RESTface 😴
 
-restface is a Python tool that provides minimal viable REST API
+RESTface is a Python tool that provides minimal viable REST API
 
 ## Installation
 
@@ -25,6 +25,17 @@ optional arguments:
   
   -d DEBUG, --debug DEBUG   if given, enable or disable debug mode
 ```
+
+# TODO:
+
+- Add filesystem-storage
+- Setting / Validating schemas
+- Autogenerating Swagger/OpenAPI specs
+- **Example app using RESTface**
+- Customizable path/url of storage
+- Allowing UUID instead of integer ids
+- Sorting by multiple criteria
+- Multiple operations with same parameter name
 
 ## License
 

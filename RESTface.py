@@ -7,17 +7,6 @@ from storage.DbStorage import DbStorage
 from storage.MemoryStorage import MemoryStorage
 
 
-# TODO:
-# memory, sqlite, fs
-# schemas set/validate
-# autogenerate Swagger/OpenAPI specs
-# example app using RESTface
-# path of storage file json/sqlite
-# uuid
-# sort by two criteria
-# multiple op on same param
-
-
 def is_float(element) -> bool:
     try:
         float(element)
