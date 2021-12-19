@@ -19,7 +19,7 @@ class RESTface:
     def __init__(self, storage_type: str = 'memory'):
         if storage_type == 'memory':
             self.storage = MemoryStorage()
-        if storage_type == 'db':
+        elif storage_type == 'db':
             self.storage = DbStorage()
         self.engine = engine()
 

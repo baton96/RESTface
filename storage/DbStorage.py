@@ -2,14 +2,10 @@ from typing import Optional
 
 import dataset
 
-db = {}
+db = dataset.connect('sqlite:///:memory:', row_type=dict)
 
 
 class DbStorage:
-    def __init__(self):
-        global db
-        db = dataset.connect('sqlite:///:memory:', row_type=dict)
-
     def create_if_not_exists(self, table_name: str):
         _ = db[table_name].table
 
@@ -32,15 +28,11 @@ class DbStorage:
         return items
 
     def post(self, table_name: str, data: Optional[dict] = None):
-        data = data or {}
-        # existing -> True, nonexisting -> id
         return db[table_name].upsert(data, ['id'])
 
     def put(self, table_name: str, data: Optional[dict] = None):
-        data = data or {}
         item_id = data.get('id')
         db[table_name].delete(id=item_id)
-        # existing -> True, nonexisting -> id
         return db[table_name].insert(data)
 
     def delete(self, table_name: str, item_id: Optional[int] = None) -> bool:

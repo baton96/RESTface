@@ -57,14 +57,12 @@ class MemoryStorage:
         return items[offset: offset + limit]
 
     def post(self, collection_name: str, data: Optional[dict] = None):
-        data = data or {}
         collection = root[collection_name]
         item_id = data.get('id') or self.generate_id(collection_name)
         collection.setdefault(item_id, {}).update({'id': item_id, **data})
         return item_id
 
     def put(self, collection_name: str, data: Optional[dict] = None):
-        data = data or {}
         collection = root[collection_name]
         item_id = data.get('id') or self.generate_id(collection_name)
         collection[item_id] = {'id': item_id, **data}
