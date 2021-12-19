@@ -5,6 +5,7 @@ from inflect import engine
 
 from storage.DbStorage import DbStorage
 from storage.MemoryStorage import MemoryStorage
+from storage.FileStorage import FileStorage
 
 
 def is_float(element) -> bool:
@@ -21,6 +22,8 @@ class RESTface:
             self.storage = MemoryStorage()
         elif storage_type == 'db':
             self.storage = DbStorage()
+        elif storage_type == 'file':
+            self.storage = FileStorage()
         self.engine = engine()
 
     def create_subhierarchy(self, parts) -> dict:
