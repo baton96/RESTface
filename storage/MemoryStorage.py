@@ -44,7 +44,12 @@ class MemoryStorage(BaseStorage):
 
         # Sorting, keep None-s and put them on the beginning of results
         order_by = meta_params['order_by']
-        order_key = lambda item: ((value := item.get(order_by)) is not None, value, item['id'])
+        order_key = lambda item: tuple(
+            [
+                ((value := item.get(order_by_arg.lstrip('-'))) is not None, value)
+                for order_by_arg in order_by
+            ] + [item['id']]
+        )
 
         desc = meta_params['desc']
         items = sorted(items, key=order_key, reverse=desc)

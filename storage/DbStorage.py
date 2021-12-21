@@ -21,7 +21,7 @@ class DbStorage(BaseStorage):
             for op_name, param_name, param_value in where_params
         }
         if meta_params.pop('desc', False):
-            meta_params['order_by'] = '-' + meta_params['order_by']
+            meta_params['order_by'] = ['-' + order_by_arg.lstrip('-') for order_by_arg in meta_params['order_by']]
         if not meta_params['_limit']:
             meta_params.pop('_limit', None)
         params = {**where_params, **meta_params}

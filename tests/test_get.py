@@ -110,6 +110,24 @@ def test_sort_none(face):
     ]
 
 
+def test_sort_multiple(face):
+    for a in range(2):
+        for b in range(2):
+            face.post({'url': f'https://example.com/users?a={1 - a}&b={1 - b}'})
+            face.post({'url': f'https://example.com/users?a={1 - a}&b={1 - b}'})
+    request = {'url': 'https://example.com/users?order_by=a,b'}
+    assert face.get(request) == [
+        {'id': 7, 'a': 0, 'b': 0},
+        {'id': 8, 'a': 0, 'b': 0},
+        {'id': 5, 'a': 0, 'b': 1},
+        {'id': 6, 'a': 0, 'b': 1},
+        {'id': 3, 'a': 1, 'b': 0},
+        {'id': 4, 'a': 1, 'b': 0},
+        {'id': 1, 'a': 1, 'b': 1},
+        {'id': 2, 'a': 1, 'b': 1}
+    ]
+
+
 def test_offset(face, items):
     request = {'url': 'https://example.com/users?offset=1'}
     assert face.get(request) == [{'id': i} for i in range(2, 5)]

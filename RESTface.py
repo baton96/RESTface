@@ -87,9 +87,10 @@ class RESTface:
             else:
                 params = self.get_params(request)
                 order_by = params.pop('order_by', None) or params.pop('sort', None) or 'id'
+                order_by = re.split(", ?", order_by.strip('({[]})'))
                 meta_params = {
-                    'order_by': order_by.lstrip('-'),
-                    'desc': ('desc' in params) or order_by.startswith('-'),
+                    'order_by': order_by,
+                    'desc': ('desc' in params),
                     '_limit': params.pop("limit", None),
                     '_offset': params.pop("offset", 0)
                 }
