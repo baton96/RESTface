@@ -39,9 +39,6 @@ class RESTface:
 
                 self.storage.post(collection_name, data)
                 parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
-            else:
-                collection_name = part
-                self.storage.create_if_not_exists(collection_name)
         return parent_info
 
     def get_params(self, request) -> dict:

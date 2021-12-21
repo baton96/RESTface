@@ -134,7 +134,7 @@ def test_same_params():
 def test_only_names():
     request = {'url': 'https://example.com/users/posts'}
     assert post(request) == 1
-    assert get_items() == {'users': {}, 'posts': {1: {'id': 1}}}
+    assert get_items() == {'posts': {1: {'id': 1}}}
 
 
 def test_only_ids():

@@ -28,8 +28,8 @@ optional arguments:
 
 # TODO:
 
-- Add filesystem-storage
-- Setting / Validating schemas
+- Setting schemas
+- Validating schemas
 - Autogenerating Swagger/OpenAPI specs
 - **Example app using RESTface**
 - Customizable path/url of storage

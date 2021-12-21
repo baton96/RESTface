@@ -29,11 +29,6 @@ class FileStorage:
             '=': operator.eq,
         })
 
-    def create_if_not_exists(self, table_name: str) -> None:
-        if table_name not in db.tables():
-            table = db.table(table_name)
-            table.truncate()
-
     def get_with_id(self, table_name: str, item_id: int) -> dict:
         table = db.table(table_name)
         return table.get(doc_id=item_id) or {}

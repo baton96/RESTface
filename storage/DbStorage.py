@@ -6,9 +6,6 @@ db = dataset.connect('sqlite:///:memory:', row_type=dict)
 
 
 class DbStorage:
-    def create_if_not_exists(self, table_name: str):
-        _ = db[table_name].table
-
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 

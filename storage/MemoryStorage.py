@@ -28,10 +28,6 @@ class MemoryStorage:
             '=': operator.eq,
         })
 
-    def create_if_not_exists(self, collection_name: str):
-        if collection_name not in root:
-            root[collection_name] = {}
-
     def get_with_id(self, collection_name: str, item_id: int):
         collection = root.get(collection_name, {})
         return collection.get(item_id, {})
@@ -57,26 +53,26 @@ class MemoryStorage:
         return items[offset: offset + limit]
 
     def post(self, collection_name: str, data: Optional[dict] = None):
-        collection = root[collection_name]
+        collection = root.setdefault(collection_name, {})
         item_id = data.get('id') or self.generate_id(collection_name)
         collection.setdefault(item_id, {}).update({'id': item_id, **data})
         return item_id
 
     def put(self, collection_name: str, data: Optional[dict] = None):
-        collection = root[collection_name]
+        collection = root.setdefault(collection_name, {})
         item_id = data.get('id') or self.generate_id(collection_name)
         collection[item_id] = {'id': item_id, **data}
         return item_id
 
     def delete(self, collection_name: str, item_id: Optional[int] = None) -> bool:
         if item_id:
-            collection = root[collection_name]
+            collection = root.setdefault(collection_name, {})
             return bool(collection.pop(item_id, None))
         else:
             return bool(root.pop(collection_name, None))
 
     def generate_id(self, collection_name: str):
-        ids = root[collection_name].keys()
+        ids = root.setdefault(collection_name, {}).keys()
         for i in itertools.count(1):
             if i not in ids:
                 return i
