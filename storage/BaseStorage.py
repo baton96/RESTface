@@ -21,3 +21,12 @@ class BaseStorage(ABC):
     @abstractmethod
     def delete(self, table_name: str, item_id: int = None) -> bool:
         pass
+
+    @abstractmethod
+    def all(self):
+        pass
+
+    @abstractmethod
+    def reset(self):
+        pass
+

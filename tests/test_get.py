@@ -1,110 +1,108 @@
 import pytest
 
-from conftest import get, post
-
 
 @pytest.fixture
-def items():
+def items(face):
     for i in range(1, 5):
         request = {'url': f'https://example.com/users'}
-        post(request)
+        face.post(request)
 
 
 @pytest.fixture
-def items_with_children():
+def items_with_children(face):
     for i in range(4):
         request = {'url': f'https://example.com/users/{(i % 2) + 1}/posts'}
-        post(request)
+        face.post(request)
 
 
 @pytest.fixture
-def items_unsorted():
+def items_unsorted(face):
     for i in [21, 3, 19, 37, 28]:
         request = {'url': f'https://example.com/users/{i}'}
-        post(request)
+        face.post(request)
 
 
-def test_get_all(items):
+def test_get_all(face, items):
     request = {'url': 'https://example.com/users'}
-    assert get(request) == [{'id': i} for i in range(1, 5)]
+    assert face.get(request) == [{'id': i} for i in range(1, 5)]
 
 
-def test_get_by_id(items):
+def test_get_by_id(face, items):
     request = {'url': 'https://example.com/users/1'}
-    assert get(request) == {'id': 1}
+    assert face.get(request) == {'id': 1}
     request = {'url': 'https://example.com/users?id=1'}
-    assert get(request) == [{'id': 1}]
+    assert face.get(request) == [{'id': 1}]
 
 
-def test_lte(items):
+def test_lte(face, items):
     request = {'url': 'https://example.com/users?id__lt=3'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
+    assert face.get(request) == [{'id': 1}, {'id': 2}]
     request = {'url': 'https://example.com/users?id__lte=2'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
+    assert face.get(request) == [{'id': 1}, {'id': 2}]
 
 
-def test_in(items):
+def test_in(face, items):
     request = {'url': 'https://example.com/users?id__in=(1,2)'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
+    assert face.get(request) == [{'id': 1}, {'id': 2}]
     request = {'url': 'https://example.com/users?id__in={1, 2}'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
+    assert face.get(request) == [{'id': 1}, {'id': 2}]
     request = {'url': 'https://example.com/users?id__in=[1, 2]'}
-    assert get(request) == [{'id': 1}, {'id': 2}]
+    assert face.get(request) == [{'id': 1}, {'id': 2}]
 
 
-def test_children(items_with_children):
+def test_children(face, items_with_children):
     request = {'url': 'https://example.com/users/1/posts'}
-    assert get(request) == [{'id': 1, 'user_id': 1}, {'id': 3, 'user_id': 1}]
+    assert face.get(request) == [{'id': 1, 'user_id': 1}, {'id': 3, 'user_id': 1}]
 
 
-def test_children_custom(items_with_children):
+def test_children_custom(face, items_with_children):
     request = {'url': 'https://example.com/users/1/posts?id__lt=2'}
-    assert get(request) == [{'id': 1, 'user_id': 1}]
+    assert face.get(request) == [{'id': 1, 'user_id': 1}]
 
 
-def test_sort(items_unsorted):
+def test_sort(face, items_unsorted):
     request = {'url': 'https://example.com/users?order_by=id'}
-    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
+    assert face.get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
 
 
-def test_sort_desc(items_unsorted):
+def test_sort_desc(face, items_unsorted):
     request = {'url': 'https://example.com/users?order_by=id&desc'}
-    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
+    assert face.get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
     request = {'url': 'https://example.com/users?desc'}
-    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
+    assert face.get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28], reverse=True)]
 
 
-def test_sort_blank(items_unsorted):
+def test_sort_blank(face, items_unsorted):
     request = {'url': 'https://example.com/users?sort'}
-    assert get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
+    assert face.get(request) == [{'id': i} for i in sorted([21, 3, 19, 37, 28])]
 
 
-def test_blank_param():
+def test_blank_param(face):
     for i in range(1, 5):
         url = 'https://example.com/users'
         if i % 2:
             url += f'?is_odd={bool(i % 3)}'
-        post({'url': url})
+        face.post({'url': url})
     request = {'url': 'https://example.com/users?is_odd'}
-    assert get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': False}]
+    assert face.get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': False}]
 
 
-def test_blank_param_no_field():
+def test_blank_param_no_field(face):
     for i in range(1, 5):
         url = f'https://example.com/users'
         if i % 2:
             url += '?is_odd=true'
-        post({'url': url})
+        face.post({'url': url})
     request = {'url': 'https://example.com/users?is_odd'}
-    assert get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]
+    assert face.get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': True}]
 
 
-def test_sort_none():
+def test_sort_none(face):
     for i in range(1, 5):
         url = f'https://example.com/users?noneable={i if i % 2 else None}'
-        post({'url': url})
+        face.post({'url': url})
     request = {'url': 'https://example.com/users?order_by=noneable'}
-    assert get(request) == [
+    assert face.get(request) == [
         {'id': 2, 'noneable': None},
         {'id': 4, 'noneable': None},
         {'id': 1, 'noneable': 1},
@@ -112,21 +110,21 @@ def test_sort_none():
     ]
 
 
-def test_offset(items):
+def test_offset(face, items):
     request = {'url': 'https://example.com/users?offset=1'}
-    assert get(request) == [{'id': i} for i in range(2, 5)]
+    assert face.get(request) == [{'id': i} for i in range(2, 5)]
 
 
-def test_offset_limit(items):
+def test_offset_limit(face, items):
     request = {'url': 'https://example.com/users?offset=1&limit=2'}
-    assert get(request) == [{'id': i} for i in range(2, 4)]
+    assert face.get(request) == [{'id': i} for i in range(2, 4)]
 
 
-def test_only_names():
+def test_only_names(face):
     request = {'url': 'https://example.com/users/posts'}
-    assert get(request) == []
+    assert face.get(request) == []
 
 
-def test_only_ids(items):
+def test_only_ids(face, items):
     request = {'url': 'https://example.com/1/2'}
-    assert get(request) == {}
+    assert face.get(request) == {}

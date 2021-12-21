@@ -1,99 +1,97 @@
 import pytest
 
-from conftest import get_items, post
 
-
-def test_simple_no_id():
+def test_simple_no_id(face):
     request = {'url': 'https://example.com/users'}
-    assert post(request) == 1
-    assert get_items() == {'users': {1: {'id': 1}}}
+    assert face.post(request) == 1
+    assert face.all() == {'users': {1: {'id': 1}}}
 
 
-def test_simple_int_id():
-    assert post({'url': 'https://example.com/users/1'}) == 1
-    assert get_items() == {'users': {1: {'id': 1}}}
-    assert post({'url': 'https://example.com/users'}) == 2
-    assert get_items() == {'users': {1: {'id': 1}, 2: {'id': 2}}}
+def test_simple_int_id(face):
+    assert face.post({'url': 'https://example.com/users/1'}) == 1
+    assert face.all() == {'users': {1: {'id': 1}}}
+    assert face.post({'url': 'https://example.com/users'}) == 2
+    assert face.all() == {'users': {1: {'id': 1}, 2: {'id': 2}}}
 
 
-def test_simple_child_no_id():
+def test_simple_child_no_id(face):
     request = {'url': 'https://example.com/users/1/posts'}
-    post(request)
-    assert get_items() == {
+    face.post(request)
+    assert face.all() == {
         'users': {1: {'id': 1}},
         'posts': {1: {'id': 1, 'user_id': 1}}
     }
 
 
-def test_simple_child_id():
+def test_simple_child_id(face):
     request = {'url': 'https://example.com/users/1/posts/2'}
-    post(request)
-    assert get_items() == {
+    face.post(request)
+    assert face.all() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1}}
     }
 
 
-def test_simple_deep():
+def test_simple_deep(face):
     request = {'url': 'https://example.com/users/1/posts/2/comments/3'}
-    post(request)
-    assert get_items() == {
+    face.post(request)
+    assert face.all() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1}},
         'comments': {3: {'id': 3, 'post_id': 2}},
     }
 
 
-def test_simple_url_data():
+def test_simple_url_data(face):
     request = {'url': 'https://example.com/users?name=myname'}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'name': 'myname'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'name': 'myname'}}}
 
 
-def test_simple_body_data():
+def test_simple_body_data(face):
     request = {'url': 'https://example.com/users', 'body': {'name': 'myname'}}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'name': 'myname'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'name': 'myname'}}}
 
 
-def test_child_url_data():
+def test_child_url_data(face):
     request = {'url': 'https://example.com/users/1/posts/2?name=myname'}
-    post(request)
-    assert get_items() == {
+    face.post(request)
+    assert face.all() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1, 'name': 'myname'}},
     }
 
 
-def test_child_body_data():
+def test_child_body_data(face):
     request = {'url': 'https://example.com/users/1/posts/2', 'body': {'name': 'myname'}}
-    post(request)
-    assert get_items() == {
+    face.post(request)
+    assert face.all() == {
         'users': {1: {'id': 1}},
         'posts': {2: {'id': 2, 'user_id': 1, 'name': 'myname'}},
     }
 
 
 @pytest.mark.skip
-def test_modify_put():
+def test_modify_put(face):
     request = {'url': 'https://example.com/users/1?a=b'}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'a': 'b'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'a': 'b'}}}
     request = {'url': 'https://example.com/users/1?c=d'}
-    put(request)
-    assert get_items() == {'users': {1: {'id': 1, 'c': 'd'}}}
+    face.put(request)
+    assert face.all() == {'users': {1: {'id': 1, 'c': 'd'}}}
 
 
-def test_modify_post():
+def test_modify_post(face):
     request = {'url': 'https://example.com/users/1?a=b'}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'a': 'b'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'a': 'b'}}}
     request = {'url': 'https://example.com/users/1?c=d'}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'a': 'b', 'c': 'd'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'a': 'b', 'c': 'd'}}}
 
 
-def test_param_types():
+def test_param_types(face):
     params = {
         'int': '1',
         'float': '0.5',
@@ -108,8 +106,8 @@ def test_param_types():
     }
     params = '&'.join(f'{name}={value}' for name, value in params.items())
     request = {'url': f'https://example.com/users?{params}'}
-    post(request)
-    assert get_items()['users'][1] == {
+    face.post(request)
+    assert face.all()['users'][1] == {
         'id': 1,
         'int': 1,
         'float': 0.5,
@@ -125,19 +123,19 @@ def test_param_types():
 
 
 @pytest.mark.skip
-def test_same_params():
+def test_same_params(face):
     request = {'url': 'https://example.com/users/1?a=b&a=c'}
-    post(request)
-    assert get_items() == {'users': {1: {'id': 1, 'a': 'b'}}}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'a': 'b'}}}
 
 
-def test_only_names():
+def test_only_names(face):
     request = {'url': 'https://example.com/users/posts'}
-    assert post(request) == 1
-    assert get_items() == {'posts': {1: {'id': 1}}}
+    assert face.post(request) == 1
+    assert face.all() == {'posts': {1: {'id': 1}}}
 
 
-def test_only_ids():
+def test_only_ids(face):
     request = {'url': 'https://example.com/1/2'}
     with pytest.raises(Exception):
-        post(request)
+        face.post(request)

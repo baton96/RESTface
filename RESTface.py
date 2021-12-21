@@ -27,6 +27,12 @@ class RESTface:
             self.storage = FileStorage(storage_path)
         self.engine = engine()
 
+    def reset(self):
+        self.storage.reset()
+
+    def all(self):
+        return self.storage.all()
+
     def create_subhierarchy(self, parts) -> dict:
         parent_info = {}
         for i, part in enumerate(parts):

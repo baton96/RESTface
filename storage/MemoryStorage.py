@@ -85,3 +85,11 @@ class MemoryStorage(BaseStorage):
         else:
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
+
+    def all(self):
+        print('all', root)
+        return root
+
+    def reset(self):
+        global root
+        root = {}

@@ -99,3 +99,9 @@ class FileStorage(BaseStorage):
         else:
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
+
+    def all(self):
+        return {table: {row.get('id'): row for row in db.table(table).all()} for table in db.tables()}
+
+    def reset(self):
+        db.drop_tables()

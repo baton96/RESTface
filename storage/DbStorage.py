@@ -1,7 +1,7 @@
 import dataset
 
 from .BaseStorage import BaseStorage
-db = None
+db = {}
 
 
 class DbStorage(BaseStorage):
@@ -44,3 +44,10 @@ class DbStorage(BaseStorage):
             existed = table_name in db.tables
             db[table_name].drop()
             return existed
+
+    def all(self):
+        return {table: {row['id']: row for row in db[table].all()} for table in db.tables}
+
+    def reset(self):
+        for table in db.tables:
+            db[table].drop()

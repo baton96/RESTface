@@ -1,31 +1,28 @@
-from conftest import get_items, post, delete
-
-
-def test_delete_one_existing():
+def test_delete_one_existing(face):
     request = {'url': 'https://example.com/users/1'}
-    assert post(request) == 1
-    delete(request)
-    assert get_items() == {'users': {}}
+    assert face.post(request) == 1
+    face.delete(request)
+    assert face.all() == {'users': {}}
 
 
-def test_delete_one_nonexisting():
+def test_delete_one_nonexisting(face):
     request = {'url': 'https://example.com/users/1'}
-    assert post(request) == 1
-    delete(request)
-    delete(request)
-    assert get_items() == {'users': {}}
+    assert face.post(request) == 1
+    face.delete(request)
+    face.delete(request)
+    assert face.all() == {'users': {}}
 
 
-def test_delete_all_existing():
+def test_delete_all_existing(face):
     request = {'url': 'https://example.com/users'}
-    assert post(request) == 1
-    delete(request)
-    assert get_items() == {}
+    assert face.post(request) == 1
+    face.delete(request)
+    assert face.all() == {}
 
 
-def test_delete_all_nonexisting():
+def test_delete_all_nonexisting(face):
     request = {'url': 'https://example.com/users'}
-    assert post(request) == 1
-    delete(request)
-    delete(request)
-    assert get_items() == {}
+    assert face.post(request) == 1
+    face.delete(request)
+    face.delete(request)
+    assert face.all() == {}
