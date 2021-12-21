@@ -32,7 +32,6 @@ optional arguments:
 - Validating schemas
 - Autogenerating Swagger/OpenAPI specs
 - **Example app using RESTface**
-- Allowing UUID instead of integer ids
 - Multiple operations with same parameter name
 
 ## License

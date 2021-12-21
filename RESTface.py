@@ -1,5 +1,6 @@
 import re
 from urllib import parse
+from uuid import UUID
 
 from inflect import engine
 
@@ -14,6 +15,16 @@ def is_float(element) -> bool:
         return True
     except ValueError:
         return False
+
+
+def parse_id(element: str):
+    if element.isdigit():
+        return int(element)
+    try:
+        UUID(element)
+        return element
+    except (ValueError, AttributeError):
+        return None
 
 
 class RESTface:
@@ -35,14 +46,12 @@ class RESTface:
     def create_subhierarchy(self, parts) -> dict:
         parent_info = {}
         for i, part in enumerate(parts):
-            if part.isdigit():
+            item_id = parse_id(part)
+            if item_id:
                 collection_name = parts[i - 1]
-                if collection_name.isdigit():
+                if parse_id(collection_name):
                     raise Exception('Invalid path')
-
-                item_id = int(part)
                 data = {'id': item_id, **parent_info}
-
                 if i != len(parts) - 1:
                     self.storage.post(collection_name, data)
                     parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
@@ -74,12 +83,11 @@ class RESTface:
         path = parse.urlsplit(request['url']).path
         url_parts = re.sub(r'^\d+', '', path).strip('/').split('/')
         last_part = url_parts[-1]
-        if last_part.isdigit():
+        item_id = parse_id(last_part)
+        if item_id:
             collection_name = str(url_parts[-2])
-            item_id = int(last_part)
         else:
             collection_name = str(last_part)
-            item_id = None
 
         if method == 'GET':
             if item_id:
@@ -100,8 +108,7 @@ class RESTface:
                 if len(url_parts) > 2:
                     parent_id_name = self.engine.singular_noun(url_parts[-3]) + '_id'
                     parent_id = url_parts[-2]
-                    if parent_id.isdigit():
-                        parent_id = int(parent_id)
+                    parent_id = parse_id(parent_id)
                     params[parent_id_name] = parent_id
 
                 where_params = []

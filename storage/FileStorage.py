@@ -1,5 +1,7 @@
+import itertools
 import operator
 import re
+import uuid
 
 import tinydb
 
@@ -9,12 +11,13 @@ db = None
 
 
 class FileStorage(BaseStorage):
-    def __init__(self, storage_path: str = None):
+    def __init__(self, storage_path: str = None, uuid_id: bool = False):
         global db
         if storage_path:
             db = tinydb.TinyDB(storage_path)
         else:
             db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
+        self.primary_type = str if uuid_id else int
 
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
@@ -37,11 +40,11 @@ class FileStorage(BaseStorage):
         })
 
     def get_with_id(self, table_name: str, item_id: int) -> dict:
-        table = db.table(table_name)
+        table = self.get_table(table_name)
         return table.get(doc_id=item_id) or {}
 
     def get_without_id(self, table_name: str, where_params: list, meta_params: dict):
-        table = db.table(table_name)
+        table = self.get_table(table_name)
         items = [
             item for item in table.all() if all(
                 self.fulfill_cond(item, param)
@@ -66,27 +69,23 @@ class FileStorage(BaseStorage):
         return items[offset: offset + limit]
 
     def post(self, table_name: str, data: dict):
-        table = db.table(table_name)
-        doc_id = data.get('id')
-        if doc_id:
-            return table.upsert(tinydb.table.Document(data, doc_id=doc_id))[0]
-        else:
-            doc_id = table.insert(data)
-            table.update({'id': doc_id}, doc_ids=[doc_id])
-            return doc_id
-
-    def put(self, table_name: str, data: dict):
-        table = db.table(table_name)
-        doc_id = data.get('id')
-        if doc_id:
-            table.remove(doc_ids=[doc_id])
-            return table.upsert(tinydb.table.Document(data, doc_id=doc_id))[0]
-        else:
-            return table.insert(data)
+        table = self.get_table(table_name)
+        item_id = data.get('id')
+        if not item_id:
+            item_ids = {item['id'] for item in table.all()}
+            if self.primary_type == int:
+                item_id = max(item_ids or {0}) + 1
+            elif self.primary_type == str:
+                generator = (str(uuid.uuid4()) for _ in itertools.count())
+                for item_id in generator:
+                    if item_id not in item_ids:
+                        break
+            data['id'] = item_id
+        return table.upsert(tinydb.table.Document(data, doc_id=item_id))[0]
 
     def delete(self, table_name: str, item_id: int = None) -> bool:
         if item_id:
-            table = db.table(table_name)
+            table = self.get_table(table_name)
             try:
                 table.remove(doc_ids=[item_id])
                 return True
@@ -97,6 +96,12 @@ class FileStorage(BaseStorage):
             db.drop_table(table_name)
             return existed
 
+    def all(self):
+        return {table_name: {row.get('id'): row for row in self.get_table(table_name).all()} for table_name in db.tables()}
+
+    def reset(self):
+        db.drop_tables()
+
     def fulfill_cond(self, item, parsed_param):
         op_name, param_name, param_value = parsed_param
         if param_value:
@@ -105,8 +110,7 @@ class FileStorage(BaseStorage):
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
 
-    def all(self):
-        return {table: {row.get('id'): row for row in db.table(table).all()} for table in db.tables()}
-
-    def reset(self):
-        db.drop_tables()
+    def get_table(self, table_name):
+        table = db.table(table_name)
+        table.document_id_class = self.primary_type
+        return table

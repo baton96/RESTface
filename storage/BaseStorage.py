@@ -15,10 +15,6 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def put(self, table_name: str, data: dict):
-        pass
-
-    @abstractmethod
     def delete(self, table_name: str, item_id: int = None) -> bool:
         pass
 

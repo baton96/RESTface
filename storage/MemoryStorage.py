@@ -1,6 +1,7 @@
 import itertools
 import operator
 import re
+import uuid
 
 from .BaseStorage import BaseStorage
 
@@ -8,7 +9,9 @@ root = {}
 
 
 class MemoryStorage(BaseStorage):
-    def __init__(self):
+    def __init__(self, uuid_id: bool = False):
+        self.primary_type = str if uuid_id else int
+
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
             op_name: getattr(operator, op_name)
@@ -60,7 +63,17 @@ class MemoryStorage(BaseStorage):
 
     def post(self, collection_name: str, data: dict):
         collection = root.setdefault(collection_name, {})
-        item_id = data.get('id') or self.generate_id(collection_name)
+        item_id = data.get('id')
+        if not item_id:
+            item_ids = root.setdefault(collection_name, {}).keys()
+            if self.primary_type == int:
+                item_id = max(item_ids or {0}) + 1
+            elif self.primary_type == str:
+                generator = (str(uuid.uuid4()) for _ in itertools.count())
+                for item_id in generator:
+                    if item_id not in item_ids:
+                        break
+            data['id'] = item_id
         collection.setdefault(item_id, {}).update({'id': item_id, **data})
         return item_id
 
@@ -92,7 +105,6 @@ class MemoryStorage(BaseStorage):
         return op(item.get(param_name), param_value)
 
     def all(self):
-        print('all', root)
         return root
 
     def reset(self):
