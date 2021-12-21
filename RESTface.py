@@ -3,10 +3,9 @@ from urllib import parse
 
 from inflect import engine
 
-from storage.BaseStorage import BaseStorage
 from storage.DbStorage import DbStorage
-from storage.MemoryStorage import MemoryStorage
 from storage.FileStorage import FileStorage
+from storage.MemoryStorage import MemoryStorage
 
 
 def is_float(element) -> bool:
@@ -37,15 +36,16 @@ class RESTface:
         parent_info = {}
         for i, part in enumerate(parts):
             if part.isdigit():
-                item_id = int(part)
-                data = {'id': item_id, **parent_info}
-
                 collection_name = parts[i - 1]
                 if collection_name.isdigit():
                     raise Exception('Invalid path')
 
-                self.storage.post(collection_name, data)
-                parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
+                item_id = int(part)
+                data = {'id': item_id, **parent_info}
+
+                if i != len(parts) - 1:
+                    self.storage.post(collection_name, data)
+                    parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
         return parent_info
 
     def get_params(self, request) -> dict:
@@ -119,12 +119,11 @@ class RESTface:
 
         elif method in {'POST', 'PUT'}:
             parent_info = self.create_subhierarchy(url_parts)
+            item_id = {'id': item_id} if item_id else {}
             params = self.get_params(request)
             body = request.get('body', {})
-            if item_id:
-                data = {'id': item_id, **params, **body}
-            else:
-                data = {**parent_info, **params, **body} or {}
+
+            data = {**parent_info, **item_id, **params, **body} or {}
             if method == 'POST':
                 return self.storage.post(collection_name, data)
             else:

@@ -32,7 +32,6 @@ optional arguments:
 - Validating schemas
 - Autogenerating Swagger/OpenAPI specs
 - **Example app using RESTface**
-- Customizable path/url of storage
 - Allowing UUID instead of integer ids
 - Sorting by multiple criteria
 - Multiple operations with same parameter name
