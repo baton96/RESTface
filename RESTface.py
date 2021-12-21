@@ -18,13 +18,13 @@ def is_float(element) -> bool:
 
 
 class RESTface:
-    def __init__(self, storage_type: str = 'memory'):
+    def __init__(self, storage_type: str = 'memory', storage_path: str = None):
         if storage_type == 'memory':
             self.storage = MemoryStorage()
         elif storage_type == 'db':
-            self.storage = DbStorage()
+            self.storage = DbStorage(storage_path)
         elif storage_type == 'file':
-            self.storage = FileStorage()
+            self.storage = FileStorage(storage_path)
         self.engine = engine()
 
     def create_subhierarchy(self, parts) -> dict:

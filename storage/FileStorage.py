@@ -5,11 +5,17 @@ import tinydb
 
 from .BaseStorage import BaseStorage
 
-db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
+db = None
 
 
 class FileStorage(BaseStorage):
-    def __init__(self):
+    def __init__(self, storage_path: str = None):
+        global db
+        if storage_path:
+            db = tinydb.TinyDB(storage_path)
+        else:
+            db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
+
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
             op_name: getattr(operator, op_name)

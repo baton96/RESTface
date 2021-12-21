@@ -1,10 +1,15 @@
 import dataset
 
 from .BaseStorage import BaseStorage
-db = dataset.connect('sqlite:///:memory:', row_type=dict)
+db = None
 
 
 class DbStorage(BaseStorage):
+    def __init__(self, storage_path: str = None):
+        global db
+        storage_path = storage_path or 'sqlite:///:memory:'
+        db = dataset.connect(storage_path, row_type=dict)
+
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 

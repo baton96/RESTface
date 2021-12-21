@@ -8,9 +8,7 @@ root = {}
 
 
 class MemoryStorage(BaseStorage):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    def __init__(self):
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
             op_name: getattr(operator, op_name)
