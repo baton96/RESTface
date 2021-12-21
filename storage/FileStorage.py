@@ -1,13 +1,14 @@
-from typing import Optional
 import operator
-import tinydb
 import re
 
+import tinydb
+
+from .BaseStorage import BaseStorage
 
 db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
 
 
-class FileStorage:
+class FileStorage(BaseStorage):
     def __init__(self):
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
@@ -72,7 +73,7 @@ class FileStorage:
         else:
             return table.insert(data)
 
-    def delete(self, table_name: str, item_id: Optional[int] = None) -> bool:
+    def delete(self, table_name: str, item_id: int = None) -> bool:
         if item_id:
             table = db.table(table_name)
             try:

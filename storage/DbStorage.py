@@ -1,11 +1,10 @@
-from typing import Optional
-
 import dataset
 
+from .BaseStorage import BaseStorage
 db = dataset.connect('sqlite:///:memory:', row_type=dict)
 
 
-class DbStorage:
+class DbStorage(BaseStorage):
     def get_with_id(self, table_name: str, item_id: int):
         return db[table_name].find_one(id=item_id) or {}
 
@@ -24,15 +23,15 @@ class DbStorage:
         items = list(db[table_name].find(**params))
         return items
 
-    def post(self, table_name: str, data: Optional[dict] = None):
+    def post(self, table_name: str, data: dict):
         return db[table_name].upsert(data, ['id'])
 
-    def put(self, table_name: str, data: Optional[dict] = None):
+    def put(self, table_name: str, data: dict):
         item_id = data.get('id')
         db[table_name].delete(id=item_id)
         return db[table_name].insert(data)
 
-    def delete(self, table_name: str, item_id: Optional[int] = None) -> bool:
+    def delete(self, table_name: str, item_id: int = None) -> bool:
         if item_id:
             existed = db[table_name].delete(id=item_id)
             return existed

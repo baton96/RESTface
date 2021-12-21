@@ -1,13 +1,16 @@
 import itertools
 import operator
 import re
-from typing import Optional
+
+from .BaseStorage import BaseStorage
 
 root = {}
 
 
-class MemoryStorage:
-    def __init__(self):
+class MemoryStorage(BaseStorage):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
         self.ops = {
             op_name: getattr(operator, op_name)
@@ -52,19 +55,19 @@ class MemoryStorage:
         limit = meta_params['_limit'] or len(items) - offset
         return items[offset: offset + limit]
 
-    def post(self, collection_name: str, data: Optional[dict] = None):
+    def post(self, collection_name: str, data: dict):
         collection = root.setdefault(collection_name, {})
         item_id = data.get('id') or self.generate_id(collection_name)
         collection.setdefault(item_id, {}).update({'id': item_id, **data})
         return item_id
 
-    def put(self, collection_name: str, data: Optional[dict] = None):
+    def put(self, collection_name: str, data: dict):
         collection = root.setdefault(collection_name, {})
         item_id = data.get('id') or self.generate_id(collection_name)
         collection[item_id] = {'id': item_id, **data}
         return item_id
 
-    def delete(self, collection_name: str, item_id: Optional[int] = None) -> bool:
+    def delete(self, collection_name: str, item_id: int = None) -> bool:
         if item_id:
             collection = root.setdefault(collection_name, {})
             return bool(collection.pop(item_id, None))

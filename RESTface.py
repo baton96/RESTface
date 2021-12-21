@@ -3,6 +3,7 @@ from urllib import parse
 
 from inflect import engine
 
+from storage.BaseStorage import BaseStorage
 from storage.DbStorage import DbStorage
 from storage.MemoryStorage import MemoryStorage
 from storage.FileStorage import FileStorage
@@ -117,7 +118,7 @@ class RESTface:
             if item_id:
                 data = {'id': item_id, **params, **body}
             else:
-                data = {**parent_info, **params, **body}
+                data = {**parent_info, **params, **body} or {}
             if method == 'POST':
                 return self.storage.post(collection_name, data)
             else:
