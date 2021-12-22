@@ -4,22 +4,19 @@ import dataset
 
 from .BaseStorage import BaseStorage
 
-db = {}
-
 
 class DbStorage(BaseStorage):
     def __init__(self, storage_path: str = None, uuid_id: bool = False):
-        global db
         storage_path = storage_path or 'sqlite:///:memory:'
-        db = dataset.connect(storage_path, row_type=dict)
-        self.primary_type = db.types.string if uuid_id else db.types.integer
+        self.db = dataset.connect(storage_path, row_type=dict)
+        self.primary_type = self.db.types.string if uuid_id else self.db.types.integer
 
     def get_with_id(self, table_name: str, item_id: int):
-        table = db.get_table(table_name, primary_type=self.primary_type)
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
         return table.find_one(id=item_id) or {}
 
     def get_without_id(self, table_name: str, where_params: list, meta_params: dict):
-        table = db.get_table(table_name, primary_type=self.primary_type)
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
         where_params = {
             param_name: (
                 {op_name: param_value} if param_value else {'not': None}
@@ -35,8 +32,8 @@ class DbStorage(BaseStorage):
         return items
 
     def post(self, table_name: str, data: dict):
-        table = db.get_table(table_name, primary_type=self.primary_type)
-        if 'id' not in data and self.primary_type == db.types.string:
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
+        if 'id' not in data and self.primary_type == self.db.types.string:
             item_ids = {item['id'] for item in table.all()}
             while True:
                 item_id = str(uuid.uuid4())
@@ -46,18 +43,18 @@ class DbStorage(BaseStorage):
         return table.upsert(data, ['id'])
 
     def delete(self, table_name: str, item_id: int = None) -> bool:
-        table = db.get_table(table_name, primary_type=self.primary_type)
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
         if item_id:
             existed = table.delete(id=item_id)
             return existed
         else:
-            existed = table_name in db.tables
+            existed = table_name in self.db.tables
             table.drop()
             return existed
 
     def all(self):
-        return {table: {row['id']: row for row in db[table].all()} for table in db.tables}
+        return {table: {row['id']: row for row in self.db[table].all()} for table in self.db.tables}
 
     def reset(self):
-        for table in db.tables:
-            db[table].drop()
+        for table in self.db.tables:
+            self.db[table].drop()

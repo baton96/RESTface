@@ -1,43 +1,18 @@
 import itertools
-import operator
-import re
 import uuid
 
 import tinydb
 
-from .BaseStorage import BaseStorage
-
-db = None
+from .JSONStorage import JSONStorage
 
 
-class FileStorage(BaseStorage):
+class FileStorage(JSONStorage):
     def __init__(self, storage_path: str = None, uuid_id: bool = False):
-        global db
+        super().__init__(storage_path, uuid_id)
         if storage_path:
-            db = tinydb.TinyDB(storage_path)
+            self.db = tinydb.TinyDB(storage_path)
         else:
-            db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
-        self.primary_type = str if uuid_id else int
-
-        op_names = ['eq', 'ge', 'gt', 'le', 'lt', 'ne']
-        self.ops = {
-            op_name: getattr(operator, op_name)
-            for op_name in op_names
-        }
-        self.ops.update({
-            'between': lambda item, collection: collection[0] <= item <= collection[-1],
-            'ilike': lambda string, pattern: re.search(pattern, str(string).lower()),
-            'like': lambda string, pattern: re.search(pattern, str(string)),
-            'startswith': lambda string, pattern: str(string).startswith(pattern),
-            'endswith': lambda string, pattern: str(string).endswith(pattern),
-            'notin': lambda item, collection: str(item) not in collection,
-            'in': lambda item, collection: str(item) in collection,
-            'gte': operator.ge,
-            'lte': operator.le,
-            'neq': operator.ne,
-            'not': operator.ne,
-            '=': operator.eq,
-        })
+            self.db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
 
     def get_with_id(self, table_name: str, item_id: int) -> dict:
         table = self.get_table(table_name)
@@ -92,8 +67,8 @@ class FileStorage(BaseStorage):
             except KeyError:
                 return False
         else:
-            existed = table_name in db.tables()
-            db.drop_table(table_name)
+            existed = table_name in self.db.tables()
+            self.db.drop_table(table_name)
             return existed
 
     def all(self):
@@ -101,21 +76,13 @@ class FileStorage(BaseStorage):
             table_name: {
                 row.get('id'): row
                 for row in self.get_table(table_name).all()
-            } for table_name in db.tables()
+            } for table_name in self.db.tables()
         }
 
     def reset(self):
-        db.drop_tables()
-
-    def fulfill_cond(self, item, parsed_param):
-        op_name, param_name, param_value = parsed_param
-        if param_value:
-            op = self.ops[op_name]
-        else:
-            op = lambda field, _: field is not None
-        return op(item.get(param_name), param_value)
+        self.db.drop_tables()
 
     def get_table(self, table_name):
-        table = db.table(table_name)
+        table = self.db.table(table_name)
         table.document_id_class = self.primary_type
         return table
