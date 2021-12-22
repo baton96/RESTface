@@ -18,31 +18,6 @@ class FileStorage(JSONStorage):
         table = self.get_table(table_name)
         return table.get(doc_id=item_id) or {}
 
-    def get_without_id(self, table_name: str, where_params: list, meta_params: dict):
-        table = self.get_table(table_name)
-        items = [
-            item for item in table.all() if all(
-                self.fulfill_cond(item, param)
-                for param in where_params
-            )
-        ]
-
-        # Sorting, keep None-s and put them on the beginning of results
-        order_by = meta_params['order_by']
-        order_key = lambda item: tuple(
-            [
-                ((value := item.get(order_by_arg.lstrip('-'))) is not None, value)
-                for order_by_arg in order_by
-            ] + [item['id']]
-        )
-
-        desc = meta_params['desc']
-        items = sorted(items, key=order_key, reverse=desc)
-
-        offset = meta_params['_offset']
-        limit = meta_params['_limit'] or len(items) - offset
-        return items[offset: offset + limit]
-
     def post(self, table_name: str, data: dict):
         table = self.get_table(table_name)
         item_id = data.get('id')
@@ -86,3 +61,6 @@ class FileStorage(JSONStorage):
         table = self.db.table(table_name)
         table.document_id_class = self.primary_type
         return table
+
+    def get_items(self, table_name: str):
+        return self.get_table(table_name).all()

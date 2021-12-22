@@ -1,6 +1,6 @@
 import operator
 import re
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from .BaseStorage import BaseStorage
 
@@ -36,3 +36,32 @@ class JSONStorage(BaseStorage, ABC):
         else:
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
+
+    @abstractmethod
+    def get_items(self, collection_name):
+        pass
+
+    def get_without_id(self, collection_name: str, where_params: list, meta_params: dict):
+        items = self.get_items(collection_name)
+        items = [
+            item for item in items if all(
+                self.fulfill_cond(item, param)
+                for param in where_params
+            )
+        ]
+
+        # Sorting, keep None-s and put them on the beginning of results
+        order_by = meta_params['order_by']
+        order_key = lambda item: tuple(
+            [
+                ((value := item.get(order_by_arg.lstrip('-'))) is not None, value)
+                for order_by_arg in order_by
+            ] + [item['id']]
+        )
+
+        desc = meta_params['desc']
+        items = sorted(items, key=order_key, reverse=desc)
+
+        offset = meta_params['_offset']
+        limit = meta_params['_limit'] or len(items) - offset
+        return items[offset: offset + limit]
