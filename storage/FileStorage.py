@@ -1,6 +1,3 @@
-import itertools
-import uuid
-
 import tinydb
 
 from .JSONStorage import JSONStorage

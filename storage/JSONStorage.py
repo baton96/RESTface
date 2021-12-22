@@ -40,6 +40,10 @@ class JSONStorage(BaseStorage, ABC):
         return op(item.get(param_name), param_value)
 
     @abstractmethod
+    def get_table(self, collection_name: str):
+        pass
+
+    @abstractmethod
     def get_items(self, collection_name):
         pass
 
