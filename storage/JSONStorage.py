@@ -1,5 +1,7 @@
+import itertools
 import operator
 import re
+import uuid
 from abc import ABC, abstractmethod
 
 from .BaseStorage import BaseStorage
@@ -65,3 +67,16 @@ class JSONStorage(BaseStorage, ABC):
         offset = meta_params['_offset']
         limit = meta_params['_limit'] or len(items) - offset
         return items[offset: offset + limit]
+
+    def get_id(self, collection_name: str, data: dict):
+        item_id = data.get('id')
+        if not item_id:
+            item_ids = {item['id'] for item in self.get_items(collection_name)}
+            if self.primary_type == int:
+                item_id = max(item_ids or {0}) + 1
+            elif self.primary_type == str:
+                generator = (str(uuid.uuid4()) for _ in itertools.count())
+                for item_id in generator:
+                    if item_id not in item_ids:
+                        break
+        return item_id

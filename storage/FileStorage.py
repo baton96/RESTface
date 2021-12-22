@@ -20,17 +20,8 @@ class FileStorage(JSONStorage):
 
     def post(self, table_name: str, data: dict):
         table = self.get_table(table_name)
-        item_id = data.get('id')
-        if not item_id:
-            item_ids = {item['id'] for item in table.all()}
-            if self.primary_type == int:
-                item_id = max(item_ids or {0}) + 1
-            elif self.primary_type == str:
-                generator = (str(uuid.uuid4()) for _ in itertools.count())
-                for item_id in generator:
-                    if item_id not in item_ids:
-                        break
-            data['id'] = item_id
+        item_id = self.get_id(table_name, data)
+        data['id'] = item_id
         return table.upsert(tinydb.table.Document(data, doc_id=item_id))[0]
 
     def delete(self, table_name: str, item_id: int = None) -> bool:
@@ -63,4 +54,5 @@ class FileStorage(JSONStorage):
         return table
 
     def get_items(self, table_name: str):
+        print(self.get_table(table_name).all())
         return self.get_table(table_name).all()
