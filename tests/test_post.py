@@ -1,5 +1,6 @@
-import pytest
 import uuid
+
+import pytest
 
 
 def is_valid_uuid(element):

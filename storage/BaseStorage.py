@@ -25,4 +25,3 @@ class BaseStorage(ABC):
     @abstractmethod
     def reset(self):
         pass
-

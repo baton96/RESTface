@@ -97,7 +97,12 @@ class FileStorage(BaseStorage):
             return existed
 
     def all(self):
-        return {table_name: {row.get('id'): row for row in self.get_table(table_name).all()} for table_name in db.tables()}
+        return {
+            table_name: {
+                row.get('id'): row
+                for row in self.get_table(table_name).all()
+            } for table_name in db.tables()
+        }
 
     def reset(self):
         db.drop_tables()
