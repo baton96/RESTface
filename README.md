@@ -33,6 +33,10 @@ optional arguments:
 - Autogenerating Swagger/OpenAPI specs
 - **Example app using RESTface**
 - Multiple operations with same parameter name
+- PUT method
+- MongoDB
+- Redis
+- Insert many
 
 ## License
 
