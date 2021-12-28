@@ -42,6 +42,9 @@ class RESTface:
         elif storage_type == 'file':
             from storage.FileStorage import FileStorage
             self.storage = FileStorage(storage_path)
+        elif storage_type == 'mongo':
+            from storage.MongoStorage import MongoStorage
+            self.storage = MongoStorage(storage_path)
         self.engine = engine()
 
     def reset(self):
@@ -94,7 +97,7 @@ class RESTface:
                 meta_params = {
                     'order_by': order_by,
                     'desc': ('desc' in params),
-                    '_limit': params.pop("limit", None),
+                    '_limit': params.pop("limit", 0),
                     '_offset': params.pop("offset", 0)
                 }
                 params.pop('desc', None)
