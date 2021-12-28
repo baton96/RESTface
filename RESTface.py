@@ -4,17 +4,21 @@ from uuid import UUID
 
 from inflect import engine
 
-from storage.DbStorage import DbStorage
-from storage.FileStorage import FileStorage
-from storage.MemoryStorage import MemoryStorage
 
-
-def is_float(element) -> bool:
-    try:
-        float(element)
+def parse_param(initial_param):
+    param = initial_param.lower()
+    if param == 'true':
         return True
-    except ValueError:
+    elif param == 'false':
         return False
+    elif param.isdigit():
+        return int(param)
+    elif param in ('none', 'null'):
+        return None
+    try:
+        return float(param)
+    except ValueError:
+        return initial_param
 
 
 def parse_id(element: str):
@@ -30,10 +34,13 @@ def parse_id(element: str):
 class RESTface:
     def __init__(self, storage_type: str = 'memory', storage_path: str = None):
         if storage_type == 'memory':
+            from storage.MemoryStorage import MemoryStorage
             self.storage = MemoryStorage()
         elif storage_type == 'db':
+            from storage.DbStorage import DbStorage
             self.storage = DbStorage(storage_path)
         elif storage_type == 'file':
+            from storage.FileStorage import FileStorage
             self.storage = FileStorage(storage_path)
         self.engine = engine()
 
@@ -61,22 +68,10 @@ class RESTface:
         url = request['url']
         query = parse.urlsplit(url).query
         params = parse.parse_qs(query, keep_blank_values=True)
-        for param_name in params.keys():
-            param_value = params[param_name][0].lower()
-            if param_value == 'true':
-                param_value = True
-            elif param_value == 'false':
-                param_value = False
-            elif param_value.isdigit():
-                param_value = int(param_value)
-            elif param_value in ('none', 'null'):
-                param_value = None
-            elif is_float(param_value):
-                param_value = float(param_value)
-            else:
-                params[param_name] = params[param_name][0]
-                continue
-            params[param_name] = param_value
+        params = {
+            param_name: parse_param(param_value[0])
+            for param_name, param_value in params.items()
+        }
         return params
 
     def handler(self, request, method):
@@ -120,6 +115,7 @@ class RESTface:
                         op_name = '='
                     if op_name in {'between', 'notin', 'in'}:
                         param_value = re.split(", ?", param_value.strip('({[]})'))
+                        param_value = [parse_param(param) for param in param_value]
                     where_params += [[op_name, param_name, param_value]]
 
                 items = self.storage.get_without_id(collection_name, where_params, meta_params)

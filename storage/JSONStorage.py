@@ -22,8 +22,8 @@ class JSONStorage(BaseStorage, ABC):
             'like': lambda string, pattern: re.search(pattern, str(string)),
             'startswith': lambda string, pattern: str(string).startswith(pattern),
             'endswith': lambda string, pattern: str(string).endswith(pattern),
-            'notin': lambda item, collection: str(item) not in collection,
-            'in': lambda item, collection: str(item) in collection,
+            'notin': lambda item, collection: item not in collection,
+            'in': lambda item, collection: item in collection,
             'gte': operator.ge,
             'lte': operator.le,
             'neq': operator.ne,
@@ -79,8 +79,8 @@ class JSONStorage(BaseStorage, ABC):
             if self.primary_type == int:
                 item_id = max(item_ids or {0}) + 1
             elif self.primary_type == str:
-                generator = (str(uuid.uuid4()) for _ in itertools.count())
-                for item_id in generator:
+                while True:
+                    item_id = str(uuid.uuid4())
                     if item_id not in item_ids:
                         break
         return item_id
