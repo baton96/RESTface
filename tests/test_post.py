@@ -103,15 +103,16 @@ def test_modify_post(face):
 
 
 def test_modify_put(face):
+    if face.storage.__class__.__name__ == 'DbStorage':
+        warnings.warn('PUT method is not implemented for DbStorage')
+        return
+
     request = {'url': 'https://example.com/users/1?a=b'}
     face.put(request)
     assert face.all() == {'users': [{'id': 1, 'a': 'b'}]}
     request = {'url': 'https://example.com/users/1?c=d'}
     face.put(request)
-    if face.storage.__class__.__name__ != 'DbStorage':
-        assert face.all() == {'users': [{'id': 1, 'c': 'd'}]}
-    else:
-        warnings.warn('PUT method is not implemented for DbStorage')
+    assert face.all() == {'users': [{'id': 1, 'c': 'd'}]}
 
 
 def test_param_types(face):
