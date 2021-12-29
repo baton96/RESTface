@@ -54,7 +54,7 @@ class MongoStorage(BaseStorage):
             } for item in results
         ]
 
-    def post(self, collection_name: str, data: dict):
+    def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         collection = self.db[collection_name]
         if 'id' not in data:
             item_ids = {item['_id'] for item in collection.find()}

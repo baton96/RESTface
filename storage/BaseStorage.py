@@ -12,8 +12,14 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def post(self, table_name: str, data: dict):
+    def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         pass
+
+    def post(self, table_name: str, data: dict) -> Union[int, str]:
+        return self.put_n_post(table_name, data, 'POST')
+
+    def put(self, table_name: str, data: dict) -> Union[int, str]:
+        return self.put_n_post(table_name, data, 'PUT')
 
     @abstractmethod
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:

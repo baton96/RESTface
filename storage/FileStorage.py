@@ -17,7 +17,7 @@ class FileStorage(JSONStorage):
         table = self.get_table(table_name)
         return table.get(doc_id=item_id) or {}
 
-    def post(self, table_name: str, data: dict):
+    def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         table = self.get_table(table_name)
         item_id = self.get_id(table_name, data)
         data['id'] = item_id

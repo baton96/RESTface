@@ -32,7 +32,7 @@ class DbStorage(BaseStorage):
         items = list(table.find(**params))
         return items
 
-    def post(self, table_name: str, data: dict):
+    def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if 'id' not in data and self.primary_type == self.db.types.string:
             item_ids = {item['id'] for item in table.all()}
