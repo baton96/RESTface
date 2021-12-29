@@ -40,12 +40,10 @@ class FileStorage(JSONStorage):
             self.db.drop_table(table_name)
             return existed
 
-    def all(self):
+    def all(self) -> dict:
         return {
-            table_name: {
-                row.get('id'): row
-                for row in self.get_table(table_name).all()
-            } for table_name in self.db.tables()
+            table_name: self.get_table(table_name).all()
+            for table_name in self.db.tables()
         }
 
     def reset(self) -> None:

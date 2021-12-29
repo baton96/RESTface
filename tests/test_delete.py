@@ -2,7 +2,7 @@ def test_delete_one_existing(face):
     request = {'url': 'https://example.com/users/1'}
     assert face.post(request) == [1]
     face.delete(request)
-    assert face.all() == {'users': {}}
+    assert face.all() == {'users': []}
 
 
 def test_delete_one_nonexisting(face):
@@ -10,7 +10,7 @@ def test_delete_one_nonexisting(face):
     assert face.post(request) == [1]
     face.delete(request)
     face.delete(request)
-    assert face.all() == {'users': {}}
+    assert face.all() == {'users': []}
 
 
 def test_delete_all_existing(face):

@@ -28,8 +28,11 @@ class MemoryStorage(JSONStorage):
         else:
             return bool(self.db.pop(collection_name, None))
 
-    def all(self):
-        return self.db
+    def all(self) -> dict:
+        return {
+            collection_name: list(items.values())
+            for collection_name, items in self.db.items()
+        }
 
     def reset(self) -> None:
         self.db = {}

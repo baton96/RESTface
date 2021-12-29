@@ -57,8 +57,11 @@ class DbStorage(BaseStorage):
             table.drop()
             return existed
 
-    def all(self):
-        return {table: {row['id']: row for row in self.db[table].all()} for table in self.db.tables}
+    def all(self) -> dict:
+        return {
+            table_name: list(self.db[table_name].all())
+            for table_name in self.db.tables
+        }
 
     def reset(self) -> None:
         for table in self.db.tables:

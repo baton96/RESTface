@@ -83,13 +83,16 @@ class MongoStorage(BaseStorage):
             existed = collection.drop()
             return existed
 
-    def all(self):
+    def all(self) -> dict:
         return {
-            collection_name: {
-                item['_id']: {
-                    (k if k != '_id' else 'id'): v for k, v in item.items()
-                } for item in self.db[collection_name].find()
-            } for collection_name in self.db.list_collection_names()
+            collection_name: [
+                {
+                    (k if k != '_id' else 'id'): v
+                    for k, v in item.items()
+                }
+                for item in self.db[collection_name].find()
+            ]
+            for collection_name in self.db.list_collection_names()
         }
 
     def reset(self) -> None:
