@@ -1,4 +1,5 @@
 import uuid
+from typing import List
 
 import dataset
 
@@ -31,16 +32,20 @@ class DbStorage(BaseStorage):
         items = list(table.find(**params))
         return items
 
-    def post(self, table_name: str, data: dict):
+    def post(self, table_name: str, data: List[dict]):
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if 'id' not in data and self.primary_type == self.db.types.string:
-            item_ids = {item['id'] for item in table.all()}
-            while True:
-                item_id = str(uuid.uuid4())
-                if item_id not in item_ids:
-                    break
-            data['id'] = item_id
-        return table.upsert(data, ['id'])
+        item_ids = []
+        for item in data:
+            if 'id' not in item and self.primary_type == self.db.types.string:
+                existing_item_ids = {_item['id'] for _item in table.all()}
+                while True:
+                    item_id = str(uuid.uuid4())
+                    if item_id not in existing_item_ids:
+                        break
+                item['id'] = item_id
+            item_id = table.upsert(item, ['id'])
+            item_ids.append(item_id)
+        return item_ids
 
     def delete(self, table_name: str, item_id: int = None) -> bool:
         table = self.db.get_table(table_name, primary_type=self.primary_type)

@@ -13,23 +13,23 @@ def is_valid_uuid(element):
 
 def test_simple_no_id(face):
     request = {'url': 'https://example.com/users'}
-    assert face.post(request) == 1
+    assert face.post(request) == [1]
     assert face.all() == {'users': {1: {'id': 1}}}
 
 
 def test_simple_int_id(face):
-    assert face.post({'url': 'https://example.com/users/1'}) == 1
+    assert face.post({'url': 'https://example.com/users/1'}) == [1]
     assert face.all() == {'users': {1: {'id': 1}}}
-    assert face.post({'url': 'https://example.com/users'}) == 2
+    assert face.post({'url': 'https://example.com/users'}) == [2]
     assert face.all() == {'users': {1: {'id': 1}, 2: {'id': 2}}}
 
 
 def test_simple_uuid_id(face):
     face.storage = face.storage.__class__(uuid_id=True)
     item_id = str(uuid.uuid4())
-    assert face.post({'url': f'https://example.com/users/{item_id}'}) == item_id
+    assert face.post({'url': f'https://example.com/users/{item_id}'}) == [item_id]
     assert face.all() == {'users': {item_id: {'id': item_id}}}
-    new_item_id = face.post({'url': 'https://example.com/users'})
+    new_item_id = face.post({'url': 'https://example.com/users'})[0]
     assert is_valid_uuid(new_item_id)
     assert face.all() == {'users': {item_id: {'id': item_id}, new_item_id: {'id': new_item_id}}}
 
@@ -141,7 +141,7 @@ def test_same_params(face):
 
 def test_only_names(face):
     request = {'url': 'https://example.com/users/posts'}
-    assert face.post(request) == 1
+    assert face.post(request) == [1]
     assert face.all() == {'posts': {1: {'id': 1}}}
 
 

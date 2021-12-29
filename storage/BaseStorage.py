@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 
 class BaseStorage(ABC):
@@ -11,7 +12,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def post(self, table_name: str, data: dict):
+    def post(self, table_name: str, data: List[dict]):
         pass
 
     @abstractmethod

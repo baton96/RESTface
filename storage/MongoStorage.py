@@ -1,3 +1,5 @@
+from typing import List
+
 from .BaseStorage import BaseStorage
 import pymongo
 import uuid
@@ -51,21 +53,26 @@ class MongoStorage(BaseStorage):
             } for item in results
         ]
 
-    def post(self, collection_name: str, data: dict):
+    def post(self, collection_name: str, data: List[dict]):
         collection = self.db[collection_name]
-        if 'id' not in data:
-            item_ids = {item['_id'] for item in collection.find()}
-            if self.primary_type == int:
-                item_id = max(item_ids or {0}) + 1
-            elif self.primary_type == str:
-                while True:
-                    item_id = str(uuid.uuid4())
-                    if item_id not in item_ids:
-                        break
-            data['id'] = item_id
-        item_id = data['id']
-        data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
-        return collection.update_one({'_id': item_id}, data, True).upserted_id or item_id
+        item_ids = []
+        for item in data:
+            if 'id' not in item:
+                existing_item_ids = {_item['_id'] for _item in collection.find()}
+                item_id = None
+                if self.primary_type == int:
+                    item_id = max(existing_item_ids or {0}) + 1
+                elif self.primary_type == str:
+                    while True:
+                        item_id = str(uuid.uuid4())
+                        if item_id not in existing_item_ids:
+                            break
+                item['id'] = item_id
+            item_id = item['id']
+            item = {'$set': {k: v for k, v in item.items() if k != 'id'}}
+            item_id = collection.update_one({'_id': item_id}, item, True).upserted_id or item_id
+            item_ids.append(item_id)
+        return item_ids
 
     def delete(self, collection_name: str, item_id: int = None) -> bool:
         collection = self.db[collection_name]

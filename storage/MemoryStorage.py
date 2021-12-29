@@ -1,3 +1,5 @@
+from typing import List
+
 from .JSONStorage import JSONStorage
 
 
@@ -10,11 +12,14 @@ class MemoryStorage(JSONStorage):
         collection = self.db.get(collection_name, {})
         return collection.get(item_id, {})
 
-    def post(self, collection_name: str, data: dict):
+    def post(self, collection_name: str, data: List[dict]):
         collection = self.get_table(collection_name)
-        item_id = self.get_id(collection_name, data)
-        collection.setdefault(item_id, {}).update({'id': item_id, **data})
-        return item_id
+        item_ids = []
+        for item in data:
+            item_id = self.get_id(collection_name, item)
+            item_ids.append(item_id)
+            collection.setdefault(item_id, {}).update({'id': item_id, **item})
+        return item_ids
 
     def delete(self, collection_name: str, item_id: int = None) -> bool:
         if item_id:

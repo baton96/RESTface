@@ -34,9 +34,8 @@ optional arguments:
 - **Example app using RESTface**
 - Multiple operations with same parameter name
 - PUT method
-- MongoDB
 - Redis
-- Insert many
+- Optimize insert many
 
 ## License
 
