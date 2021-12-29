@@ -1,5 +1,4 @@
-import uuid
-from typing import Union
+from typing import Union, List
 
 import pymongo
 
@@ -8,6 +7,7 @@ from .BaseStorage import BaseStorage
 
 class MongoStorage(BaseStorage):
     def __init__(self, storage_path: str = None, uuid_id: bool = False):
+        super().__init__()
         storage_path = storage_path or 'mongodb://localhost:27017'
         self.db = pymongo.MongoClient(storage_path).db
         self.primary_type = str if uuid_id else int
@@ -55,19 +55,8 @@ class MongoStorage(BaseStorage):
         ]
 
     def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
+        item_id = self.get_id(collection_name, data)
         collection = self.db[collection_name]
-        if 'id' not in data:
-            item_ids = {item['_id'] for item in collection.find()}
-            item_id = None
-            if self.primary_type == int:
-                item_id = max(item_ids or {0}) + 1
-            elif self.primary_type == str:
-                while True:
-                    item_id = str(uuid.uuid4())
-                    if item_id not in item_ids:
-                        break
-            data['id'] = item_id
-        item_id = data['id']
         if method == 'POST':
             data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
             upserted_item = collection.update_one({'_id': item_id}, data, True)
@@ -99,5 +88,7 @@ class MongoStorage(BaseStorage):
         }
 
     def reset(self) -> None:
-        for collection_name in self.db.list_collection_names():
-            self.db.drop_collection(collection_name)
+        self.db.client.drop_database(self.db)
+
+    def get_items(self, collection_name) -> List[dict]:
+        return [{'id': item['_id']} for item in self.db[collection_name].find()]

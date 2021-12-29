@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from .JSONStorage import JSONStorage
 
@@ -16,9 +16,9 @@ class MemoryStorage(JSONStorage):
         collection = self.get_table(collection_name)
         item_id = self.get_id(collection_name, data)
         if method == 'POST':
-            collection.setdefault(item_id, {}).update({'id': item_id, **data})
+            collection.setdefault(item_id, {}).update(data)
         elif method == 'PUT':
-            collection[item_id] = {'id': item_id, **data}
+            collection[item_id] = data
         return item_id
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
@@ -40,5 +40,5 @@ class MemoryStorage(JSONStorage):
     def get_table(self, collection_name: str):
         return self.db.setdefault(collection_name, {})
 
-    def get_items(self, collection_name: str):
+    def get_items(self, collection_name: str) -> List[dict]:
         return list(self.get_table(collection_name).values())

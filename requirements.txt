@@ -1,5 +1,4 @@
 inflect
-pytest
 flask
 dataset
 tinydb

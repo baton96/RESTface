@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 import tinydb
 
@@ -18,15 +18,15 @@ class FileStorage(JSONStorage):
         return table.get(doc_id=item_id) or {}
 
     def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
-        table = self.get_table(table_name)
         item_id = self.get_id(table_name, data)
-        data['id'] = item_id
+        table = self.get_table(table_name)
         if method == 'PUT':
             try:
                 table.remove(doc_ids=[item_id])
             except KeyError:
                 pass
-        return table.upsert(tinydb.table.Document(data, doc_id=item_id))[0]
+        table.upsert(tinydb.table.Document(data, doc_id=item_id))
+        return item_id
 
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
         if item_id:
@@ -55,5 +55,5 @@ class FileStorage(JSONStorage):
         table.document_id_class = self.primary_type
         return table
 
-    def get_items(self, table_name: str):
+    def get_items(self, table_name: str) -> List[dict]:
         return self.get_table(table_name).all()
