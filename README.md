@@ -26,7 +26,7 @@ optional arguments:
   -d DEBUG, --debug DEBUG   if given, enable or disable debug mode
 ```
 
-# TODO:
+# Ideas:
 
 - Setting schemas
 - Validating schemas
@@ -36,6 +36,7 @@ optional arguments:
 - PUT method
 - Redis
 - Optimize insert many
+- More methods
 
 ## License
 

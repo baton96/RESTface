@@ -74,6 +74,12 @@ def test_simple_body_data(face):
     assert face.all() == {'users': {1: {'id': 1, 'name': 'myname'}}}
 
 
+def test_post_many(face):
+    request = {'url': 'https://example.com/users', 'body': [{'name': 'a'}, {'name': 'b'}]}
+    face.post(request)
+    assert face.all() == {'users': {1: {'id': 1, 'name': 'a'}, 2: {'id': 2, 'name': 'b'}}}
+
+
 def test_child_url_data(face):
     request = {'url': 'https://example.com/users/1/posts/2?name=myname'}
     face.post(request)
@@ -99,6 +105,16 @@ def test_modify_post(face):
     request = {'url': 'https://example.com/users/1?c=d'}
     face.post(request)
     assert face.all() == {'users': {1: {'id': 1, 'a': 'b', 'c': 'd'}}}
+
+
+@pytest.mark.skip
+def test_modify_put(face):
+    request = {'url': 'https://example.com/users/1?a=b'}
+    face.put(request)
+    assert face.all() == {'users': {1: {'id': 1, 'a': 'b'}}}
+    request = {'url': 'https://example.com/users/1?c=d'}
+    face.put(request)
+    assert face.all() == {'users': {1: {'id': 1, 'c': 'd'}}}
 
 
 def test_param_types(face):
