@@ -81,7 +81,7 @@ def test_blank_param(face):
     for i in range(1, 5):
         url = 'https://example.com/users'
         if i % 2:
-            url += f'?is_odd={bool(i % 3)}'
+            url += f'?is_odd={"true" if i % 3 else "false"}'
         face.post({'url': url})
     request = {'url': 'https://example.com/users?is_odd'}
     assert face.get(request) == [{'id': 1, 'is_odd': True}, {'id': 3, 'is_odd': False}]
@@ -99,7 +99,7 @@ def test_blank_param_no_field(face):
 
 def test_sort_none(face):
     for i in range(1, 5):
-        url = f'https://example.com/users?noneable={i if i % 2 else None}'
+        url = f'https://example.com/users?noneable={i if i % 2 else "null"}'
         face.post({'url': url})
     request = {'url': 'https://example.com/users?order_by=noneable'}
     assert face.get(request) == [

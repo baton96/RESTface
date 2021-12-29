@@ -8,7 +8,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def get_without_id(self, table_name: str, where_params: list, meta_params: dict) -> dict:
+    def get_without_id(self, table_name: str, where_params: list, meta_params: dict) -> list:
         pass
 
     @abstractmethod

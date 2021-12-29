@@ -120,11 +120,8 @@ def test_param_types(face):
         'int': '1',
         'float': '0.5',
         'str': 'value',
-        'big_true': 'True',
-        'small_true': 'true',
-        'big_false': 'False',
-        'small_false': 'false',
-        'none': 'none',
+        'true': 'true',
+        'false': 'false',
         'null': 'null',
         'empty': ''
     }
@@ -136,11 +133,8 @@ def test_param_types(face):
         'int': 1,
         'float': 0.5,
         'str': 'value',
-        'big_true': True,
-        'small_true': True,
-        'big_false': False,
-        'small_false': False,
-        'none': None,
+        'true': True,
+        'false': False,
         'null': None,
         'empty': ''
     }

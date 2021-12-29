@@ -1,24 +1,16 @@
 import re
+from json import loads
 from urllib import parse
 from uuid import UUID
 
 from inflect import engine
 
 
-def parse_param(initial_param):
-    param = initial_param.lower()
-    if param == 'true':
-        return True
-    elif param == 'false':
-        return False
-    elif param.isdigit():
-        return int(param)
-    elif param in ('none', 'null'):
-        return None
+def parse_param(obj):
     try:
-        return float(param)
+        return loads(obj)
     except ValueError:
-        return initial_param
+        return obj
 
 
 def parse_id(element: str):
@@ -117,7 +109,7 @@ class RESTface:
                     else:
                         op_name = '='
                     if op_name in {'between', 'notin', 'in'}:
-                        param_value = re.split(", ?", param_value.strip('({[]})'))
+                        param_value = re.split(", ?", str(param_value).strip('({[]})'))
                         param_value = [parse_param(param) for param in param_value]
                     where_params += [[op_name, param_name, param_value]]
 
