@@ -41,6 +41,8 @@ class DbStorage(BaseStorage):
                 if item_id not in item_ids:
                     break
             data['id'] = item_id
+        if method == 'PUT':
+            table.delete(id=data['id'])
         return table.upsert(data, ['id'])
 
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:

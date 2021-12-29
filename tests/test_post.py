@@ -1,4 +1,5 @@
 import uuid
+import warnings
 
 import pytest
 
@@ -101,14 +102,16 @@ def test_modify_post(face):
     assert face.all() == {'users': [{'id': 1, 'a': 'b', 'c': 'd'}]}
 
 
-@pytest.mark.skip
 def test_modify_put(face):
     request = {'url': 'https://example.com/users/1?a=b'}
     face.put(request)
     assert face.all() == {'users': [{'id': 1, 'a': 'b'}]}
     request = {'url': 'https://example.com/users/1?c=d'}
     face.put(request)
-    assert face.all() == {'users': [{'id': 1, 'c': 'd'}]}
+    if face.storage.__class__.__name__ != 'DbStorage':
+        assert face.all() == {'users': [{'id': 1, 'c': 'd'}]}
+    else:
+        warnings.warn('PUT method is not implemented for DbStorage')
 
 
 def test_param_types(face):

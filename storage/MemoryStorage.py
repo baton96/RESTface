@@ -15,7 +15,10 @@ class MemoryStorage(JSONStorage):
     def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         collection = self.get_table(collection_name)
         item_id = self.get_id(collection_name, data)
-        collection.setdefault(item_id, {}).update({'id': item_id, **data})
+        if method == 'POST':
+            collection.setdefault(item_id, {}).update({'id': item_id, **data})
+        elif method == 'PUT':
+            collection[item_id] = {'id': item_id, **data}
         return item_id
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:

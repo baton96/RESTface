@@ -21,6 +21,11 @@ class FileStorage(JSONStorage):
         table = self.get_table(table_name)
         item_id = self.get_id(table_name, data)
         data['id'] = item_id
+        if method == 'PUT':
+            try:
+                table.remove(doc_ids=[item_id])
+            except KeyError:
+                pass
         return table.upsert(tinydb.table.Document(data, doc_id=item_id))[0]
 
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:

@@ -68,8 +68,14 @@ class MongoStorage(BaseStorage):
                         break
             data['id'] = item_id
         item_id = data['id']
-        data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
-        return collection.update_one({'_id': item_id}, data, True).upserted_id or item_id
+        if method == 'POST':
+            data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
+            upserted_item = collection.update_one({'_id': item_id}, data, True)
+        # elif method == 'PUT':
+        else:
+            data = {k: v for k, v in data.items() if k != 'id'}
+            upserted_item = collection.replace_one({'_id': item_id}, data, True)
+        return upserted_item.upserted_id or item_id
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
         collection = self.db[collection_name]
