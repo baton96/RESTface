@@ -35,7 +35,7 @@ optional arguments:
 - Multiple operations with same parameter name
 - PUT method
 - Redis
-- Optimize insert many
+- Insert many
 - More methods
 
 ## License

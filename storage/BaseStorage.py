@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import Union
 
 
 class BaseStorage(ABC):
@@ -8,11 +8,11 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def get_without_id(self, table_name: str, where_params: list, meta_params: dict) -> list:
+    def get_without_id(self, table_name: str, where_params: list, meta_params: dict) -> dict:
         pass
 
     @abstractmethod
-    def post(self, table_name: str, data: List[dict]):
+    def post(self, table_name: str, data: dict):
         pass
 
     @abstractmethod

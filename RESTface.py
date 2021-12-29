@@ -61,7 +61,7 @@ class RESTface:
                 collection_name = parts[i - 1]
                 if parse_id(collection_name):
                     raise Exception('Invalid path')
-                data = [{'id': item_id, **parent_info}]
+                data = {'id': item_id, **parent_info}
                 if i != len(parts) - 1:
                     self.storage.post(collection_name, data)
                     parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
@@ -129,14 +129,7 @@ class RESTface:
             item_id = {'id': item_id} if item_id else {}
             params = self.get_params(request)
             body = request.get('body', {})
-            if not body or type(body) == dict:
-                data = [{**parent_info, **item_id, **params, **body}]
-            else:
-                data = [
-                    {**parent_info, **item_id, **params, **item}
-                    for item in body
-                ]
-
+            data = {**parent_info, **item_id, **params, **body}
             if method == 'POST':
                 return self.storage.post(collection_name, data)
             else:
