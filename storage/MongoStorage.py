@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from .BaseStorage import BaseStorage
 import pymongo
@@ -11,14 +11,14 @@ class MongoStorage(BaseStorage):
         self.db = pymongo.MongoClient(storage_path).db
         self.primary_type = str if uuid_id else int
 
-    def get_with_id(self, collection_name: str, item_id: int):
+    def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
         collection = self.db[collection_name]
         return {
             (k if k != '_id' else 'id'): v
             for k, v in (collection.find_one({'_id': item_id}) or {}).items()
         }
 
-    def get_without_id(self, collection_name: str, where_params_raw: list, meta_params: dict):
+    def get_without_id(self, collection_name: str, where_params_raw: list, meta_params: dict) -> list:
         collection = self.db[collection_name]
         where_params = {}
         for op_name, param_name, param_value in where_params_raw:
@@ -74,7 +74,7 @@ class MongoStorage(BaseStorage):
             item_ids.append(item_id)
         return item_ids
 
-    def delete(self, collection_name: str, item_id: int = None) -> bool:
+    def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
         collection = self.db[collection_name]
         if item_id:
             existed = collection.delete_one({'_id': item_id})
@@ -92,6 +92,6 @@ class MongoStorage(BaseStorage):
             } for collection_name in self.db.list_collection_names()
         }
 
-    def reset(self):
+    def reset(self) -> None:
         for collection_name in self.db.list_collection_names():
             self.db.drop_collection(collection_name)

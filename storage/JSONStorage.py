@@ -1,4 +1,3 @@
-import itertools
 import operator
 import re
 import uuid
@@ -47,7 +46,7 @@ class JSONStorage(BaseStorage, ABC):
     def get_items(self, collection_name):
         pass
 
-    def get_without_id(self, collection_name: str, where_params: list, meta_params: dict):
+    def get_without_id(self, collection_name: str, where_params: list, meta_params: dict) -> list:
         items = self.get_items(collection_name)
         items = [
             item for item in items if all(

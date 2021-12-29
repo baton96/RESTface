@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import tinydb
 
@@ -13,7 +13,7 @@ class FileStorage(JSONStorage):
         else:
             self.db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
 
-    def get_with_id(self, table_name: str, item_id: int) -> dict:
+    def get_with_id(self, table_name: str, item_id: Union[int, str]) -> dict:
         table = self.get_table(table_name)
         return table.get(doc_id=item_id) or {}
 
@@ -27,7 +27,7 @@ class FileStorage(JSONStorage):
             table.upsert(tinydb.table.Document(item, doc_id=item_id))
         return item_ids
 
-    def delete(self, table_name: str, item_id: int = None) -> bool:
+    def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
         if item_id:
             table = self.get_table(table_name)
             try:
@@ -48,7 +48,7 @@ class FileStorage(JSONStorage):
             } for table_name in self.db.tables()
         }
 
-    def reset(self):
+    def reset(self) -> None:
         self.db.drop_tables()
 
     def get_table(self, table_name):
@@ -57,5 +57,4 @@ class FileStorage(JSONStorage):
         return table
 
     def get_items(self, table_name: str):
-        print(self.get_table(table_name).all())
         return self.get_table(table_name).all()

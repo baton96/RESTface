@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Union
 
 import dataset
 
@@ -12,11 +12,11 @@ class DbStorage(BaseStorage):
         self.db = dataset.connect(storage_path, row_type=dict)
         self.primary_type = self.db.types.string if uuid_id else self.db.types.integer
 
-    def get_with_id(self, table_name: str, item_id: int):
+    def get_with_id(self, table_name: str, item_id: Union[int, str]) -> dict:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         return table.find_one(id=item_id) or {}
 
-    def get_without_id(self, table_name: str, where_params: list, meta_params: dict):
+    def get_without_id(self, table_name: str, where_params: list, meta_params: dict) -> list:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         where_params = {
             param_name: (
@@ -47,7 +47,7 @@ class DbStorage(BaseStorage):
             item_ids.append(item_id)
         return item_ids
 
-    def delete(self, table_name: str, item_id: int = None) -> bool:
+    def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if item_id:
             existed = table.delete(id=item_id)
@@ -60,6 +60,6 @@ class DbStorage(BaseStorage):
     def all(self):
         return {table: {row['id']: row for row in self.db[table].all()} for table in self.db.tables}
 
-    def reset(self):
+    def reset(self) -> None:
         for table in self.db.tables:
             self.db[table].drop()
