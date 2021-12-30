@@ -24,19 +24,19 @@ def parse_id(element: str):
 
 
 class RESTface:
-    def __init__(self, storage_type: str = 'memory', storage_path: str = None):
+    def __init__(self, storage_type: str = 'memory', storage_path: str = None, uuid_id: bool = False):
         if storage_type == 'memory':
             from storage.MemoryStorage import MemoryStorage
-            self.storage = MemoryStorage()
+            self.storage = MemoryStorage(uuid_id)
         elif storage_type == 'db':
             from storage.DbStorage import DbStorage
-            self.storage = DbStorage(storage_path)
+            self.storage = DbStorage(storage_path, uuid_id)
         elif storage_type == 'file':
             from storage.FileStorage import FileStorage
-            self.storage = FileStorage(storage_path)
+            self.storage = FileStorage(storage_path, uuid_id)
         elif storage_type == 'mongo':
             from storage.MongoStorage import MongoStorage
-            self.storage = MongoStorage(storage_path)
+            self.storage = MongoStorage(storage_path, uuid_id)
         self.engine = engine()
 
     def reset(self):
