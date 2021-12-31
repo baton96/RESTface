@@ -50,6 +50,9 @@ class FileStorage(JSONStorage):
     def reset(self) -> None:
         self.db.drop_tables()
 
+    def get_ids(self, table_name: str) -> set:
+        return {item['id'] for item in self.get_table(table_name).all()}
+
     def get_table(self, table_name):
         table = self.db.table(table_name)
         table.document_id_class = self.primary_type

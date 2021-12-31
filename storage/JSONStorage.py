@@ -30,6 +30,10 @@ class JSONStorage(BaseStorage, ABC):
             '=': operator.eq,
         })
 
+    @abstractmethod
+    def get_items(self, collection_name: str) -> set:
+        pass
+
     def fulfill_cond(self, item, parsed_param):
         op_name, param_name, param_value = parsed_param
         if param_value:
@@ -37,10 +41,6 @@ class JSONStorage(BaseStorage, ABC):
         else:
             op = lambda field, _: field is not None
         return op(item.get(param_name), param_value)
-
-    @abstractmethod
-    def get_table(self, collection_name: str):
-        pass
 
     def get_without_id(self, collection_name: str, where_params: list, meta_params: dict) -> list:
         items = self.get_items(collection_name)

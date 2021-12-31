@@ -13,7 +13,7 @@ class MemoryStorage(JSONStorage):
         return collection.get(item_id, {})
 
     def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
-        collection = self.get_table(collection_name)
+        collection = self.db.setdefault(collection_name, {})
         item_id = self.get_id(collection_name, data)
         if method == 'POST':
             collection.setdefault(item_id, {}).update(data)
@@ -37,8 +37,10 @@ class MemoryStorage(JSONStorage):
     def reset(self) -> None:
         self.db = {}
 
-    def get_table(self, collection_name: str):
-        return self.db.setdefault(collection_name, {})
+    def get_ids(self, collection_name: str) -> set:
+        collection = self.db.setdefault(collection_name, {})
+        return set(collection.keys())
 
     def get_items(self, collection_name: str) -> List[dict]:
-        return list(self.get_table(collection_name).values())
+        collection = self.db.setdefault(collection_name, {})
+        return list(collection.values())

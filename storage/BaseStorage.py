@@ -1,6 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Union, List
+from typing import Union
 
 
 class BaseStorage(ABC):
@@ -37,13 +37,13 @@ class BaseStorage(ABC):
     def reset(self) -> None:
         pass
 
-    def get_items(self, collection_name) -> List[dict]:
-        return []
+    def get_ids(self, collection_name: str) -> set:
+        pass
 
     def get_id(self, collection_name: str, data: dict):
         item_id = data.get('id')
         if not item_id:
-            item_ids = {item['id'] for item in self.get_items(collection_name)}
+            item_ids = self.get_ids(collection_name)
             if self.primary_type == int:
                 item_id = max(item_ids or {0}) + 1
             elif self.primary_type == str:

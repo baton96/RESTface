@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union
 
 import pymongo
 
@@ -89,5 +89,5 @@ class MongoStorage(BaseStorage):
     def reset(self) -> None:
         self.db.client.drop_database(self.db)
 
-    def get_items(self, collection_name) -> List[dict]:
-        return [{'id': item['_id']} for item in self.db[collection_name].find()]
+    def get_ids(self, collection_name: str) -> set:
+        return {item['_id'] for item in self.db[collection_name].find()}
