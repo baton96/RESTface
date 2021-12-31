@@ -7,7 +7,6 @@ from .BaseStorage import BaseStorage
 
 class MongoStorage(BaseStorage):
     def __init__(self, storage_path: str = 'mongodb://localhost:27017', uuid_id: bool = False):
-        super().__init__()
         self.db = pymongo.MongoClient(storage_path).db
         self.primary_type = str if uuid_id else int
 
