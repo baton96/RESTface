@@ -64,10 +64,8 @@ class RedisStorage(BaseStorage):
 
     def get_items(self, collection_name) -> List[dict]:
         items = [
-            {
-                k: self.decode(v)
-                for k, v in self.db.hgetall(f'{collection_name}:{item_id}').items()
-            } for item_id in self.db.smembers(collection_name)
+            self.get_with_id(collection_name, item_id)
+            for item_id in self.db.smembers(collection_name)
         ]
         return items
 
