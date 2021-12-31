@@ -2,10 +2,10 @@ from typing import Union, List
 
 import tinydb
 
-from .JSONStorage import JSONStorage
+from .BaseStorage import BaseStorage
 
 
-class FileStorage(JSONStorage):
+class FileStorage(BaseStorage):
     def __init__(self, storage_path: str = None, uuid_id: bool = False):
         super().__init__(storage_path, uuid_id)
         if storage_path:

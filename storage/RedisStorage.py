@@ -3,10 +3,10 @@ from typing import Union, List
 
 import redis
 
-from .JSONStorage import JSONStorage
+from .BaseStorage import BaseStorage
 
 
-class RedisStorage(JSONStorage):
+class RedisStorage(BaseStorage):
     def __init__(self, _: str = None, uuid_id: bool = False):
         super().__init__()
         self.db = redis.Redis(decode_responses=True)

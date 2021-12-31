@@ -1,9 +1,9 @@
 from typing import Union, List
 
-from .JSONStorage import JSONStorage
+from .BaseStorage import BaseStorage
 
 
-class MemoryStorage(JSONStorage):
+class MemoryStorage(BaseStorage):
     def __init__(self, uuid_id: bool = False):
         super().__init__(None, uuid_id)
         self.db = {}
