@@ -32,7 +32,13 @@ def test_simple_uuid_id(face):
     assert face.all() == {'users': [{'id': item_id}]}
     new_item_id = face.post({'url': 'https://example.com/users'})
     assert is_valid_uuid(new_item_id)
-    assert face.all() == {'users': [{'id': item_id}, {'id': new_item_id}]}
+    assert sorted(
+        face.all()['users'],
+        key=lambda item: item['id']
+    ) == sorted(
+        [{'id': item_id}, {'id': new_item_id}],
+        key=lambda item: item['id']
+    )
 
 
 def test_simple_child_no_id(face):

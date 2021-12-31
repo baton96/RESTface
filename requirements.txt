@@ -3,3 +3,4 @@ flask
 dataset
 tinydb
 pymongo
+redis

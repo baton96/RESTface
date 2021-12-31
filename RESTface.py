@@ -37,6 +37,9 @@ class RESTface:
         elif storage_type == 'mongo':
             from storage.MongoStorage import MongoStorage
             self.storage = MongoStorage(storage_path, uuid_id)
+        elif storage_type == 'redis':
+            from storage.RedisStorage import RedisStorage
+            self.storage = RedisStorage(storage_path, uuid_id)
         self.engine = engine()
 
     def reset(self):
