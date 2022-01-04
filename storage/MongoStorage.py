@@ -29,6 +29,18 @@ class MongoStorage(BaseStorage):
                     where_params[param_name] = {'$exists': True}
                 else:
                     where_params[param_name] = param_value
+            elif op_name == 'between':
+                where_params[param_name] = {'$gte': param_value[0], '$lte': param_value[-1]}
+            elif op_name == 'startswith':
+                where_params[param_name] = {'$regex': '^' + param_value}
+            elif op_name == 'endswith':
+                where_params[param_name] = {'$regex': param_value + '$'}
+            elif 'like' in op_name:
+                where_params[param_name] = {'$regex': param_value}
+                if op_name[0] == 'i':
+                    where_params[param_name]['$options'] = 'i'
+            elif op_name == 'notin':
+                where_params[param_name] = {'$nin': param_value}
             else:
                 where_params[param_name] = {('$' + op_name): param_value}
 
@@ -58,7 +70,6 @@ class MongoStorage(BaseStorage):
         if method == 'POST':
             data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
             upserted_item = collection.update_one({'_id': item_id}, data, True)
-        # elif method == 'PUT':
         else:
             data = {k: v for k, v in data.items() if k != 'id'}
             upserted_item = collection.replace_one({'_id': item_id}, data, True)
