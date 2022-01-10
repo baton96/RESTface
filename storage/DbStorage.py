@@ -3,10 +3,8 @@ from typing import Union
 
 import dataset
 
-from .BaseStorage import BaseStorage
 
-
-class DbStorage(BaseStorage):
+class DbStorage:
     def __init__(self, storage_path: str = 'sqlite:///:memory:', uuid_id: bool = False):
         self.db = dataset.connect(storage_path, row_type=dict)
         self.primary_type = self.db.types.string if uuid_id else self.db.types.integer

@@ -87,6 +87,9 @@ class RESTface:
                 return self.storage.get_with_id(collection_name, item_id)
             else:
                 params = self.get_params(request)
+                if 'id' in params:
+                    item = self.storage.get_with_id(collection_name, params['id'])
+                    return [item] if item else []
                 order_by = params.pop('order_by', None) or params.pop('sort', None) or 'id'
                 order_by = re.split(", ?", order_by.strip('({[]})'))
                 meta_params = {

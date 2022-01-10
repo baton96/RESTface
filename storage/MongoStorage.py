@@ -8,7 +8,6 @@ from .BaseStorage import BaseStorage
 class MongoStorage(BaseStorage):
     def __init__(self, storage_path: str = 'mongodb://localhost:27017', uuid_id: bool = False):
         self.db = pymongo.MongoClient(storage_path).db
-        self.primary_type = str if uuid_id else int
 
     def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
         collection = self.db[collection_name]
