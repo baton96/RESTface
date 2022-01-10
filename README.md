@@ -26,6 +26,15 @@ optional arguments:
   -d DEBUG, --debug DEBUG   if given, enable or disable debug mode
 ```
 
+# Storage types
+
+- `DbStorage` - Any type of database supported by sqlalchemy
+  (SQLite, Postgresql, MySQL, Oracle, MS-SQL, Firebird, Sybase); defaults to `sqlite:///:memory:`
+- `FileStorage` - JSON file storage; defaults to virtual file ie. in-memory storage
+- `MemoryStorage` - In-memory storage built from scratch
+- `MongoStorage` - Defaults to `mongodb://localhost:27017`
+- `RedisStorage` - Defaults to `redis://localhost:6379/0`
+
 # Ideas:
 
 - Setting schemas
