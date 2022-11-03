@@ -46,6 +46,8 @@ optional arguments:
 - Multiple operations with same parameter name
 - Insert many
 - Authorization
+- Populate function
+- Casting to other formats
 
 ## License
 
