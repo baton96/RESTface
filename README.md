@@ -48,6 +48,7 @@ optional arguments:
 - Authorization
 - Populate function
 - Casting to other formats
+- group_by operator
 
 ## License
 
