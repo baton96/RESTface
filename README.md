@@ -34,15 +34,21 @@ optional arguments:
 - `MemoryStorage` - In-memory storage built from scratch
 - `MongoStorage` - Defaults to `mongodb://localhost:27017`
 - `RedisStorage` - Defaults to `redis://localhost:6379/0`
+- `Neo4jStorage` - Defaults to `bolt://localhost:7687`
 
 # Ideas:
 
+- Neo4jStorage
 - Setting schemas
 - Validating schemas
 - Autogenerating Swagger/OpenAPI specs
 - **Example app using RESTface**
 - Multiple operations with same parameter name
 - Insert many
+- Authorization
+- Populate function
+- Casting to other formats
+- group_by operator
 
 ## License
 
