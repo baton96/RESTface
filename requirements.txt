@@ -4,3 +4,6 @@ dataset
 tinydb
 pymongo
 redis
+pyyaml
+pytest
+xmltodict

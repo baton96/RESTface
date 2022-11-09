@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 
 from RESTface import RESTface
+from utils import reformat
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -18,4 +19,6 @@ def index(path=None):
     else:
         body = request.get_json(force=True, silent=True) or {}
         result = face.handler({'url': path, 'body': body}, request.method)
+    if 'format' in request.args:
+        return reformat(result)
     return jsonify(result)
