@@ -12,7 +12,7 @@ face = RESTface()
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @app.route('/', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def index(path=None):
-    if not path:
+    if path is None:
         result = face.all()
     elif path == 'favicon.ico':
         return '', 404

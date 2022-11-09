@@ -1,46 +1,18 @@
 import re
-from json import loads
 from urllib import parse
-from uuid import UUID
 
-from inflect import engine
+from inflect import engine as get_engine
 
-
-def parse_param(obj):
-    try:
-        return loads(obj)
-    except ValueError:
-        return obj
-
-
-def parse_id(element: str):
-    if element.isdigit():
-        return int(element)
-    try:
-        UUID(element)
-        return element
-    except (ValueError, AttributeError):
-        return None
+from utils import (
+    get_storage,
+    parse_param, parse_id
+)
 
 
 class RESTface:
     def __init__(self, storage_type: str = 'memory', storage_path: str = None, uuid_id: bool = False):
-        if storage_type == 'memory':
-            from storage.MemoryStorage import MemoryStorage
-            self.storage = MemoryStorage(uuid_id)
-        elif storage_type == 'db':
-            from storage.DbStorage import DbStorage
-            self.storage = DbStorage(storage_path, uuid_id)
-        elif storage_type == 'file':
-            from storage.FileStorage import FileStorage
-            self.storage = FileStorage(storage_path, uuid_id)
-        elif storage_type == 'mongo':
-            from storage.MongoStorage import MongoStorage
-            self.storage = MongoStorage(storage_path, uuid_id)
-        elif storage_type == 'redis':
-            from storage.RedisStorage import RedisStorage
-            self.storage = RedisStorage(storage_path, uuid_id)
-        self.engine = engine()
+        self.storage = get_storage(storage_type, storage_path, uuid_id)
+        self.engine = get_engine()
 
     def reset(self):
         self.storage.reset()
