@@ -30,7 +30,7 @@ class RESTface:
                     raise Exception('Invalid path')
                 data = {'id': item_id, **parent_info}
                 if i != len(parts) - 1:
-                    self.storage.post(collection_name, data)
+                    self.storage.put_n_post(collection_name, data, 'POST')
                     parent_info = {self.engine.singular_noun(parts[i - 1]) + '_id': item_id}
         return parent_info
 
@@ -100,10 +100,7 @@ class RESTface:
             params = self.get_params(request)
             body = request.get('body', {})
             data = {**parent_info, **item_id, **params, **body}
-            if method == 'POST':
-                return self.storage.post(collection_name, data)
-            else:
-                return self.storage.put(collection_name, data)
+            return self.storage.put_n_post(collection_name, data, method)
         elif method == 'DELETE':
             return self.storage.delete(collection_name, item_id)
 

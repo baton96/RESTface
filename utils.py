@@ -124,8 +124,7 @@ def from_csv(obj: str):
                 del obj[k]
                 parts = k.split('.')
                 for part in parts[:-1]:
-                    tmp.setdefault(part, {})
-                    tmp = tmp[part]
+                    tmp = tmp.setdefault(part, {})
                 tmp[parts[-1]] = v
     if len(objects) == 1:
         return objects[0]
