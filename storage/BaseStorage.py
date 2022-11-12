@@ -101,9 +101,12 @@ class BaseStorage(ABC):
             if self.primary_type == int:
                 item_id = max(item_ids or {0}) + 1
             elif self.primary_type == str:
+                '''
                 while True:
                     item_id = str(uuid.uuid4())
                     if item_id not in item_ids:
                         break
+                '''
+                item_id = str(uuid.uuid4())
             data['id'] = item_id
         return item_id

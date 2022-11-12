@@ -32,12 +32,15 @@ class DbStorage:
     def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if 'id' not in data and self.primary_type == self.db.types.string:
+            '''
             item_ids = {item['id'] for item in table.all()}
             while True:
                 item_id = str(uuid.uuid4())
                 if item_id not in item_ids:
                     break
             data['id'] = item_id
+            '''
+            data['id'] = str(uuid.uuid4())
         if method == 'PUT':
             table.delete(id=data['id'])
         return table.upsert(data, ['id'])
