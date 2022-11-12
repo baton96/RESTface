@@ -72,7 +72,7 @@ def test_simple_deep(face):
 def test_simple_url_data(face):
     request = {'url': 'https://example.com/users?name=myname'}
     face.post(request)
-    assert face.all() == {'users': [{'id': 1}]}
+    assert face.all() == {'users': [{'id': 1, 'name': 'myname'}]}
 
 
 def test_simple_body_data(face):
@@ -86,7 +86,7 @@ def test_child_url_data(face):
     face.post(request)
     assert face.all() == {
         'users': [{'id': 1}],
-        'posts': [{'id': 2, 'user_id': 1}],
+        'posts': [{'id': 2, 'user_id': 1, 'name': 'myname'}],
     }
 
 

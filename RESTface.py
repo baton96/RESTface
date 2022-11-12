@@ -97,8 +97,9 @@ class RESTface:
         elif method in {'POST', 'PUT'}:
             parent_info = self.create_subhierarchy(url_parts)
             item_id = {'id': item_id} if item_id else {}
+            params = self.get_params(request)
             body = request.get('body', {})
-            data = {**parent_info, **item_id, **body}
+            data = {**parent_info, **item_id, **params, **body}
             return self.storage.put_n_post(collection_name, data, method)
         elif method == 'DELETE':
             return self.storage.delete(collection_name, item_id)
