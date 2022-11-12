@@ -47,8 +47,11 @@ optional arguments:
 - Insert many
 - Authorization
 - Populate function
-- Casting to other formats
-- group_by operator
+- Casting from other formats
+- Receiving files
+- Aggregation
+- Mixed sorting
+- Reserved words
 
 ## License
 
