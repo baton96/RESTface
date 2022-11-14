@@ -163,3 +163,25 @@ def test_only_ids(face):
     request = {'url': 'https://example.com/1/2'}
     with pytest.raises(Exception):
         face.post(request)
+
+
+def test_bulk(face):
+    request = {'url': 'https://example.com/users', 'body': [{'name': 'a'}, {'name': 'b'}]}
+    assert face.post(request) == [1, 2]
+    assert face.all() == {'users': [{'id': 1, 'name': 'a'}, {'id': 2, 'name': 'b'}]}
+
+
+def test_bulk_existing(face):
+    request = {'url': 'https://example.com/users', 'body': [{'name': 'a'}, {'name': 'b'}]}
+    assert face.post(request) == [1, 2]
+    request = {'url': 'https://example.com/users', 'body': [{'id': 1, 'name': 'c'}, {'id': 2, 'name': 'd'}]}
+    assert face.post(request) == [1, 2]
+    assert face.all() == {'users': [{'id': 1, 'name': 'c'}, {'id': 2, 'name': 'd'}]}
+
+
+def test_bulk_partially_existing(face):
+    request = {'url': 'https://example.com/users', 'body': [{'name': 'a'}, {'name': 'b'}]}
+    assert face.post(request) == [1, 2]
+    request = {'url': 'https://example.com/users', 'body': [{'id': 1, 'name': 'c'}, {'name': 'd'}]}
+    assert face.post(request) == [1, 3]
+    assert face.all() == {'users': [{'id': 1, 'name': 'c'}, {'id': 2, 'name': 'b'}, {'id': 3, 'name': 'd'}]}

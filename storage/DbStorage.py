@@ -1,5 +1,5 @@
 import uuid
-from typing import Union
+from typing import Union, List
 
 import dataset
 
@@ -32,18 +32,29 @@ class DbStorage:
     def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if 'id' not in data and self.primary_type == self.db.types.string:
-            '''
-            item_ids = {item['id'] for item in table.all()}
-            while True:
-                item_id = str(uuid.uuid4())
-                if item_id not in item_ids:
-                    break
-            data['id'] = item_id
-            '''
             data['id'] = str(uuid.uuid4())
         if method == 'PUT':
-            table.delete(id=data['id'])
-        return table.upsert(data, ['id'])
+            table.delete(id=data.get('id'))
+        item_id = table.upsert(data, ['id'], ensure=True)
+        if item_id is True:
+            item_id = data['id']
+        return item_id
+
+    def bulk_put_n_post(self, table_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
+        if self.primary_type == self.db.types.string:
+            for item in items:
+                item.setdefault('id', str(uuid.uuid4()))
+        if method == 'PUT':
+            item_ids = [item['id'] for item in items if 'id' in items]
+            table.delete(id={'in': item_ids})
+        upserted_ids = [table.upsert(item, ['id'], ensure=True) for item in items]
+        item_ids = [item.get('id') for item in items]
+        return [
+            item_id if upserted_id is True else upserted_id
+            for upserted_id, item_id
+            in zip(upserted_ids, item_ids)
+        ]
 
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
         table = self.db.get_table(table_name, primary_type=self.primary_type)

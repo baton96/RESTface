@@ -99,8 +99,15 @@ class RESTface:
             item_id = {'id': item_id} if item_id else {}
             params = self.get_params(request)
             body = request.get('body', {})
-            data = {**parent_info, **item_id, **params, **body}
-            return self.storage.put_n_post(collection_name, data, method)
+            if type(body) == list:
+                if parent_info or params:
+                    body = [{**parent_info, **params, **item} for item in body]
+                return self.storage.bulk_put_n_post(collection_name, body, method)
+            elif type(body) == dict:
+                data = {**parent_info, **item_id, **params, **body}
+                return self.storage.put_n_post(collection_name, data, method)
+            else:
+                raise Exception('Body has to be valid JSON')
         elif method == 'DELETE':
             return self.storage.delete(collection_name, item_id)
 

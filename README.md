@@ -52,6 +52,7 @@ optional arguments:
 - Aggregation
 - Mixed sorting
 - Reserved words
+- Optimize get_id
 
 ## License
 

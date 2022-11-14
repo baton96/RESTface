@@ -21,6 +21,12 @@ class MemoryStorage(BaseStorage):
             collection[item_id] = data
         return item_id
 
+    def bulk_put_n_post(self, collection_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+        return [
+            self.put_n_post(collection_name, item, method)
+            for item in items
+        ]
+
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
         if item_id:
             collection = self.db.setdefault(collection_name, {})

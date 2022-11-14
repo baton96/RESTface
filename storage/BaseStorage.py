@@ -70,11 +70,9 @@ class BaseStorage(ABC):
     def put_n_post(self, table_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
         pass
 
-    def post(self, table_name: str, data: dict) -> Union[int, str]:
-        return self.put_n_post(table_name, data, 'POST')
-
-    def put(self, table_name: str, data: dict) -> Union[int, str]:
-        return self.put_n_post(table_name, data, 'PUT')
+    # @abstractmethod
+    def bulk_put_n_post(self, table_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+        pass
 
     @abstractmethod
     def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
@@ -94,19 +92,31 @@ class BaseStorage(ABC):
     def get_items(self, collection_name: str) -> List[dict]:
         pass
 
-    def get_id(self, collection_name: str, data: dict):
+    def get_id(self, collection_name: str, data: dict) -> Union[int, str]:
         item_id = data.get('id')
         if not item_id:
-            item_ids = self.get_ids(collection_name)
             if self.primary_type == int:
+                item_ids = self.get_ids(collection_name)
                 item_id = max(item_ids or {0}) + 1
             elif self.primary_type == str:
-                '''
-                while True:
-                    item_id = str(uuid.uuid4())
-                    if item_id not in item_ids:
-                        break
-                '''
                 item_id = str(uuid.uuid4())
             data['id'] = item_id
         return item_id
+
+    def bulk_get_ids(self, collection_name: str, items: List[dict]) -> List[Union[int, str]]:
+        if self.primary_type == int:
+            item_ids = self.get_ids(collection_name)
+            cur_max = max(item_ids or {0}) + 1
+        else:
+            cur_max = None
+        for item in items:
+            item_id = item.get('id')
+            if not item_id:
+                if self.primary_type == int:
+                    item_id = cur_max
+                    cur_max += 1
+                elif self.primary_type == str:
+                    item_id = str(uuid.uuid4())
+                item['id'] = item_id
+        item_ids = [item['id'] for item in items]
+        return item_ids
