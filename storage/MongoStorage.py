@@ -1,6 +1,7 @@
-from typing import Union
+from typing import Union, List
 
 import pymongo
+from pymongo import UpdateOne, ReplaceOne
 
 from .BaseStorage import BaseStorage
 
@@ -8,6 +9,7 @@ from .BaseStorage import BaseStorage
 class MongoStorage(BaseStorage):
     def __init__(self, storage_path: str = 'mongodb://localhost:27017', uuid_id: bool = False):
         self.db = pymongo.MongoClient(storage_path).db
+        self.primary_type = str if uuid_id else int
 
     def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
         collection = self.db[collection_name]
@@ -67,12 +69,20 @@ class MongoStorage(BaseStorage):
         item_id = self.get_id(collection_name, data)
         collection = self.db[collection_name]
         if method == 'POST':
-            data = {'$set': {k: v for k, v in data.items() if k != 'id'}}
-            upserted_item = collection.update_one({'_id': item_id}, data, True)
+            upserted_item = collection.update_one({'_id': item_id}, {'$set': data}, upsert=True)
         else:
-            data = {k: v for k, v in data.items() if k != 'id'}
-            upserted_item = collection.replace_one({'_id': item_id}, data, True)
+            upserted_item = collection.replace_one({'_id': item_id}, data, upsert=True)
         return upserted_item.upserted_id or item_id
+
+    def bulk_put_n_post(self, collection_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+        self.bulk_get_ids(collection_name, items)
+        collection = self.db[collection_name]
+        if method == 'POST':
+            requests = [UpdateOne({'_id': item['id']}, {'$set': item}, upsert=True) for item in items]
+        else:
+            requests = [ReplaceOne({'_id': item['id']}, item, upsert=True) for item in items]
+        collection.bulk_write(requests)
+        return [item['id'] for item in items]
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
         collection = self.db[collection_name]
