@@ -29,6 +29,18 @@ class RedisStorage(BaseStorage):
         self.db.sadd(collection_name, item_id)
         return item_id
 
+    def bulk_put_n_post(self, collection_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+        self.bulk_get_ids(collection_name, items)
+        if method == 'PUT':
+            for item in items:
+                self.db.delete(f'{collection_name}:{item["id"]}')
+        for item in items:
+            item = {k: self.encode(v) for k, v in item.items()}
+            self.db.hset(f'{collection_name}:{item["id"]}', mapping=item)
+            self.db.sadd(collection_name, item['id'])
+        self.db.sadd('collections', collection_name)
+        return [item['id'] for item in items]
+
     def delete(self, collection_name: str, item_id: Union[int, str] = None):
         if item_id:
             self.db.delete(f'{collection_name}:{item_id}')
