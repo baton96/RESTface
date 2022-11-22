@@ -102,6 +102,7 @@ class RESTface:
             if type(body) == list:
                 if parent_info or params:
                     body = [{**parent_info, **params, **item} for item in body]
+                # body.sort(key=lambda item: ('id' not in item, item.get('id')))
                 return self.storage.bulk_put_n_post(collection_name, body, method)
             elif type(body) == dict:
                 data = {**parent_info, **item_id, **params, **body}

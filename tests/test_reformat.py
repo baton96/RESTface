@@ -14,6 +14,11 @@ test_objects = [
 ]
 
 
+@pytest.fixture()
+def face():
+    return
+
+
 @pytest.mark.parametrize('test_obj', test_objects)
 def test_yaml(test_obj):
     assert from_yaml(to_yaml(test_obj)) == test_obj
