@@ -12,20 +12,21 @@ class MemoryStorage(BaseStorage):
         collection = self.db.get(collection_name, {})
         return collection.get(item_id, {})
 
-    def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
+    def put_n_post(
+        self, collection_name: str, data: dict, method: str = "POST"
+    ) -> Union[int, str]:
         collection = self.db.setdefault(collection_name, {})
         item_id = self.get_id(collection_name, data)
-        if method == 'POST':
+        if method == "POST":
             collection.setdefault(item_id, {}).update(data)
-        elif method == 'PUT':
+        elif method == "PUT":
             collection[item_id] = data
         return item_id
 
-    def bulk_put_n_post(self, collection_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
-        return [
-            self.put_n_post(collection_name, item, method)
-            for item in items
-        ]
+    def bulk_put_n_post(
+        self, collection_name: str, items: List[dict], method: str = "POST"
+    ) -> List[Union[int, str]]:
+        return [self.put_n_post(collection_name, item, method) for item in items]
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
         if item_id:

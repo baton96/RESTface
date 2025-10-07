@@ -15,52 +15,62 @@ class RedisStorage(BaseStorage):
     def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
         item = {
             k: self.decode(v)
-            for k, v in (self.db.hgetall(f'{collection_name}:{item_id}') or {}).items()
+            for k, v in (self.db.hgetall(f"{collection_name}:{item_id}") or {}).items()
         }
         return item
 
-    def put_n_post(self, collection_name: str, data: dict, method: str = 'POST') -> Union[int, str]:
+    def put_n_post(
+        self, collection_name: str, data: dict, method: str = "POST"
+    ) -> Union[int, str]:
         item_id = self.get_id(collection_name, data)
-        if method == 'PUT':
-            self.db.delete(f'{collection_name}:{item_id}')
+        if method == "PUT":
+            self.db.delete(f"{collection_name}:{item_id}")
         data = {k: self.encode(v) for k, v in data.items()}
-        self.db.hset(f'{collection_name}:{item_id}', mapping=data)
-        self.db.sadd('collections', collection_name)
+        self.db.hset(f"{collection_name}:{item_id}", mapping=data)
+        self.db.sadd("collections", collection_name)
         self.db.sadd(collection_name, item_id)
         return item_id
 
-    def bulk_put_n_post(self, collection_name: str, items: List[dict], method: str = 'POST') -> List[Union[int, str]]:
+    def bulk_put_n_post(
+        self, collection_name: str, items: List[dict], method: str = "POST"
+    ) -> List[Union[int, str]]:
         self.bulk_get_ids(collection_name, items)
-        if method == 'PUT':
+        if method == "PUT":
             for item in items:
-                self.db.delete(f'{collection_name}:{item["id"]}')
+                self.db.delete(f"{collection_name}:{item['id']}")
         for item in items:
             item = {k: self.encode(v) for k, v in item.items()}
-            self.db.hset(f'{collection_name}:{item["id"]}', mapping=item)
-            self.db.sadd(collection_name, item['id'])
-        self.db.sadd('collections', collection_name)
-        return [item['id'] for item in items]
+            self.db.hset(f"{collection_name}:{item['id']}", mapping=item)
+            self.db.sadd(collection_name, item["id"])
+        self.db.sadd("collections", collection_name)
+        return [item["id"] for item in items]
 
     def delete(self, collection_name: str, item_id: Union[int, str] = None):
         if item_id:
-            self.db.delete(f'{collection_name}:{item_id}')
+            self.db.delete(f"{collection_name}:{item_id}")
             self.db.srem(collection_name, item_id)
         else:
             item_ids = self.db.smembers(collection_name)
             for item_id in item_ids:
-                self.db.delete(f'{collection_name}:{item_id}')
-            self.db.srem('collections', collection_name)
+                self.db.delete(f"{collection_name}:{item_id}")
+            self.db.srem("collections", collection_name)
             self.db.delete(collection_name)
 
     def all(self):
         items = {
-            collection_name: sorted([
-                {
-                    k: self.decode(v)
-                    for k, v in self.db.hgetall(f'{collection_name}:{item_id}').items()
-                } for item_id in self.db.smembers(collection_name)
-            ], key=lambda item: item['id'])
-            for collection_name in self.db.smembers('collections')
+            collection_name: sorted(
+                [
+                    {
+                        k: self.decode(v)
+                        for k, v in self.db.hgetall(
+                            f"{collection_name}:{item_id}"
+                        ).items()
+                    }
+                    for item_id in self.db.smembers(collection_name)
+                ],
+                key=lambda item: item["id"],
+            )
+            for collection_name in self.db.smembers("collections")
         }
         return items
 

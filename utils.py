@@ -12,21 +12,28 @@ from inflect import engine as get_engine
 engine = get_engine()
 
 
-def get_storage(storage_type: str = 'memory', storage_path: str = None, uuid_id: bool = False):
-    if storage_type == 'memory':
+def get_storage(
+    storage_type: str = "memory", storage_path: str = None, uuid_id: bool = False
+):
+    if storage_type == "memory":
         from storage.MemoryStorage import MemoryStorage
+
         return MemoryStorage(uuid_id)
-    elif storage_type == 'db':
+    elif storage_type == "db":
         from storage.DbStorage import DbStorage
+
         return DbStorage(storage_path, uuid_id)
-    elif storage_type == 'file':
+    elif storage_type == "file":
         from storage.FileStorage import FileStorage
+
         return FileStorage(storage_path, uuid_id)
-    elif storage_type == 'mongo':
+    elif storage_type == "mongo":
         from storage.MongoStorage import MongoStorage
+
         return MongoStorage(storage_path, uuid_id)
-    elif storage_type == 'redis':
+    elif storage_type == "redis":
         from storage.RedisStorage import RedisStorage
+
         return RedisStorage(storage_path, uuid_id)
     else:
         raise Exception("Unknown storage type")
@@ -55,28 +62,28 @@ def to_yaml(obj):
 
 def _to_xml(obj, tag: str) -> str:
     if type(obj) == dict:
-        items = ''.join(_to_xml(v, k) for k, v in obj.items())
-        return f'<{tag}>{items}</{tag}>'
+        items = "".join(_to_xml(v, k) for k, v in obj.items())
+        return f"<{tag}>{items}</{tag}>"
     elif type(obj) == list:
-        return ''.join(_to_xml(item, tag) for item in obj)
+        return "".join(_to_xml(item, tag) for item in obj)
     else:
-        return f'<{tag}>{obj}</{tag}>'
+        return f"<{tag}>{obj}</{tag}>"
 
 
 def to_xml(obj, collection_name: str) -> str:
     item_name = engine.singular_noun(collection_name)
     if type(obj) == list:
-        items = ''.join(_to_xml(item, item_name) for item in obj)
+        items = "".join(_to_xml(item, item_name) for item in obj)
         return f"<{collection_name}>{items}</{collection_name}>"
     elif type(obj) == dict:
         return _to_xml(obj, item_name)
     else:
-        raise Exception('Cannot format to XML')
+        raise Exception("Cannot format to XML")
 
 
-def flatten_dict(d, parent_key=''):
+def flatten_dict(d, parent_key=""):
     for k, v in d.items():
-        new_key = f'{parent_key}.{k}' if parent_key else k
+        new_key = f"{parent_key}.{k}" if parent_key else k
         if type(v) == dict:
             yield from dict(flatten_dict(v, new_key)).items()
         else:
@@ -110,19 +117,16 @@ def from_csv(obj: str):
     with StringIO(obj) as tmp_file:
         reader = csv.reader(tmp_file)
         keys = next(reader)
-        objects = [
-            dict(zip(keys, row))
-            for row in reader
-        ]
+        objects = [dict(zip(keys, row)) for row in reader]
     for obj in objects:
         for k, v in list(obj.items()):
-            if v == '':
+            if v == "":
                 del obj[k]
                 continue
-            if '.' in k:
+            if "." in k:
                 tmp = obj
                 del obj[k]
-                parts = k.split('.')
+                parts = k.split(".")
                 for part in parts[:-1]:
                     tmp = tmp.setdefault(part, {})
                 tmp[parts[-1]] = v
@@ -133,7 +137,7 @@ def from_csv(obj: str):
 
 
 def get_collection_name(path):
-    url_parts = re.sub(r'^\d+', '', path).strip('/').split('/')
+    url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
     last_part = url_parts[-1]
     item_id = parse_id(last_part)
     if item_id:
@@ -145,17 +149,17 @@ def get_collection_name(path):
 
 def reformat(result):
     collection_name = get_collection_name(request.path)
-    response_format = request.args.get('format')
-    if response_format == 'csv':
+    response_format = request.args.get("format")
+    if response_format == "csv":
         return Response(
             to_csv(result),
-            mimetype='text/csv',
-            headers={'Content-Disposition': f'filename={collection_name}.csv'}
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"filename={collection_name}.csv"},
         )
-    elif response_format == 'xml':
-        return Response(to_xml(result, collection_name), mimetype='text/xml')
-    elif response_format == 'yaml':
-        return Response(to_yaml(result), mimetype='text/yaml')
+    elif response_format == "xml":
+        return Response(to_xml(result, collection_name), mimetype="text/xml")
+    elif response_format == "yaml":
+        return Response(to_yaml(result), mimetype="text/yaml")
     else:
         return jsonify(result)
 
@@ -164,11 +168,11 @@ def receive_file():
     file = next(iter(request.files.values()))
     stream = file.stream.read().decode("utf-8")
     name = file.filename
-    if name.endswith('.json'):
+    if name.endswith(".json"):
         pass
-    elif name.endswith('.csv'):
+    elif name.endswith(".csv"):
         pass
-    elif name.endswith('.xml'):
+    elif name.endswith(".xml"):
         pass
-    elif name.endswith('.yaml'):
+    elif name.endswith(".yaml"):
         pass
