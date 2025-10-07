@@ -23,6 +23,8 @@ def index(path=None):
     else:
         body = request.get_json(force=True, silent=True) or {}
         result = face.handler({"url": path, "body": body}, request.method)
+    if request.method == "DELETE":
+        return '', 204
     if "format" in request.args:
         return reformat(result)
     return jsonify(result)
