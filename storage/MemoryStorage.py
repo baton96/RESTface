@@ -1,5 +1,3 @@
-from typing import Union, List
-
 from .BaseStorage import BaseStorage
 
 
@@ -8,13 +6,13 @@ class MemoryStorage(BaseStorage):
         super().__init__(None, uuid_id)
         self.db = {}
 
-    def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
+    def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
         collection = self.db.get(collection_name, {})
         return collection.get(item_id, {})
 
     def put_n_post(
         self, collection_name: str, data: dict, method: str = "POST"
-    ) -> Union[int, str]:
+    ) -> int | str:
         collection = self.db.setdefault(collection_name, {})
         item_id = self.get_id(collection_name, data)
         if method == "POST":
@@ -24,12 +22,12 @@ class MemoryStorage(BaseStorage):
         return item_id
 
     def bulk_put_n_post(
-        self, collection_name: str, items: List[dict], method: str = "POST"
-    ) -> List[Union[int, str]]:
+        self, collection_name: str, items: list[dict], method: str = "POST"
+    ) -> list[int | str]:
         return [self.put_n_post(collection_name, item, method) for item in items]
 
     def delete(
-        self, collection_name: str, where_params: list, item_id: Union[int, str] = None
+        self, collection_name: str, where_params: list, item_id: int | str = None
     ) -> None:
         if not item_id:
             self.db.pop(collection_name, None)
@@ -52,6 +50,6 @@ class MemoryStorage(BaseStorage):
         collection = self.db.setdefault(collection_name, {})
         return set(collection.keys())
 
-    def get_items(self, collection_name: str) -> List[dict]:
+    def get_items(self, collection_name: str) -> list[dict]:
         collection = self.db.setdefault(collection_name, {})
         return list(collection.values())

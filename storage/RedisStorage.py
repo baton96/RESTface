@@ -1,6 +1,4 @@
 import json
-from typing import Union, List
-
 import redis
 
 from .BaseStorage import BaseStorage
@@ -12,7 +10,7 @@ class RedisStorage(BaseStorage):
         self.db = redis.Redis(decode_responses=True)
         self.primary_type = str if uuid_id else int
 
-    def get_with_id(self, collection_name: str, item_id: Union[int, str]) -> dict:
+    def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
         item = {
             k: self.decode(v)
             for k, v in (self.db.hgetall(f"{collection_name}:{item_id}") or {}).items()
@@ -21,7 +19,7 @@ class RedisStorage(BaseStorage):
 
     def put_n_post(
         self, collection_name: str, data: dict, method: str = "POST"
-    ) -> Union[int, str]:
+    ) -> int | str:
         item_id = self.get_id(collection_name, data)
         if method == "PUT":
             self.db.delete(f"{collection_name}:{item_id}")
@@ -32,8 +30,8 @@ class RedisStorage(BaseStorage):
         return item_id
 
     def bulk_put_n_post(
-        self, collection_name: str, items: List[dict], method: str = "POST"
-    ) -> List[Union[int, str]]:
+        self, collection_name: str, items: list[dict], method: str = "POST"
+    ) -> list[int | str]:
         self.bulk_get_ids(collection_name, items)
         if method == "PUT":
             for item in items:
@@ -45,7 +43,7 @@ class RedisStorage(BaseStorage):
         self.db.sadd("collections", collection_name)
         return [item["id"] for item in items]
 
-    def delete(self, collection_name: str, item_id: Union[int, str] = None):
+    def delete(self, collection_name: str, item_id: int | str = None):
         if item_id:
             self.db.delete(f"{collection_name}:{item_id}")
             self.db.srem(collection_name, item_id)
@@ -84,7 +82,7 @@ class RedisStorage(BaseStorage):
         }
         return item_ids
 
-    def get_items(self, collection_name) -> List[dict]:
+    def get_items(self, collection_name) -> list[dict]:
         items = [
             self.get_with_id(collection_name, item_id)
             for item_id in self.db.smembers(collection_name)

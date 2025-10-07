@@ -1,5 +1,3 @@
-from typing import Union, List
-
 import tinydb
 from tinydb import where
 
@@ -14,13 +12,13 @@ class FileStorage(BaseStorage):
         else:
             self.db = tinydb.TinyDB(storage=tinydb.storages.MemoryStorage)
 
-    def get_with_id(self, table_name: str, item_id: Union[int, str]) -> dict:
+    def get_with_id(self, table_name: str, item_id: int | str) -> dict:
         table = self.get_table(table_name)
         return table.get(doc_id=item_id) or {}
 
     def put_n_post(
         self, table_name: str, data: dict, method: str = "POST"
-    ) -> Union[int, str]:
+    ) -> int | str:
         item_id = self.get_id(table_name, data)
         table = self.get_table(table_name)
         if method == "PUT":
@@ -32,8 +30,8 @@ class FileStorage(BaseStorage):
         return item_id
 
     def bulk_put_n_post(
-        self, table_name: str, items: List[dict], method: str = "POST"
-    ) -> List[Union[int, str]]:
+        self, table_name: str, items: list[dict], method: str = "POST"
+    ) -> list[int | str]:
         table = self.get_table(table_name)
         self.bulk_get_ids(table_name, items)
         item_ids = set(self.get_ids(table_name))
@@ -54,7 +52,7 @@ class FileStorage(BaseStorage):
         return [item["id"] for item in items]
 
     def delete(
-        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+        self, table_name: str, where_params: list, item_id: int | str = None
     ) -> None:
         if not item_id:
             self.db.drop_table(table_name)
@@ -83,5 +81,5 @@ class FileStorage(BaseStorage):
         table.document_id_class = self.primary_type
         return table
 
-    def get_items(self, table_name: str) -> List[dict]:
+    def get_items(self, table_name: str) -> list[dict]:
         return self.get_table(table_name).all()

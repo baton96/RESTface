@@ -2,7 +2,6 @@ import operator
 import re
 import uuid
 from abc import ABC, abstractmethod
-from typing import Union, List
 
 
 class BaseStorage(ABC):
@@ -33,7 +32,7 @@ class BaseStorage(ABC):
         )
 
     @abstractmethod
-    def get_with_id(self, table_name: str, item_id: Union[int, str]) -> dict:
+    def get_with_id(self, table_name: str, item_id: int | str) -> dict:
         pass
 
     def fulfill_cond(self, item, parsed_param):
@@ -79,18 +78,18 @@ class BaseStorage(ABC):
     @abstractmethod
     def put_n_post(
         self, table_name: str, data: dict, method: str = "POST"
-    ) -> Union[int, str]:
+    ) -> int | str:
         pass
 
     # @abstractmethod
     def bulk_put_n_post(
-        self, table_name: str, items: List[dict], method: str = "POST"
-    ) -> List[Union[int, str]]:
+        self, table_name: str, items: list[dict], method: str = "POST"
+    ) -> list[int | str]:
         pass
 
     @abstractmethod
     def delete(
-        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+        self, table_name: str, where_params: list, item_id: int | str = None
     ) -> None:
         pass
 
@@ -105,10 +104,10 @@ class BaseStorage(ABC):
     def get_ids(self, collection_name: str) -> set:
         pass
 
-    def get_items(self, collection_name: str) -> List[dict]:
+    def get_items(self, collection_name: str) -> list[dict]:
         pass
 
-    def get_id(self, collection_name: str, data: dict) -> Union[int, str]:
+    def get_id(self, collection_name: str, data: dict) -> int | str:
         item_id = data.get("id")
         if not item_id:
             if self.primary_type is int:
@@ -119,9 +118,7 @@ class BaseStorage(ABC):
             data["id"] = item_id
         return item_id
 
-    def bulk_get_ids(
-        self, collection_name: str, items: List[dict]
-    ) -> List[Union[int, str]]:
+    def bulk_get_ids(self, collection_name: str, items: list[dict]) -> list[int | str]:
         if self.primary_type is int:
             item_ids = self.get_ids(collection_name)
             cur_max = max(item_ids or {0}) + 1

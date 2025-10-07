@@ -1,5 +1,4 @@
 import uuid
-from typing import Union, List
 
 import dataset
 
@@ -9,7 +8,7 @@ class DbStorage:
         self.db = dataset.connect(storage_path, row_type=dict)
         self.primary_type = self.db.types.string if uuid_id else self.db.types.integer
 
-    def get_with_id(self, table_name: str, item_id: Union[int, str]) -> dict:
+    def get_with_id(self, table_name: str, item_id: int | str) -> dict:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         return table.find_one(id=item_id) or {}
 
@@ -34,7 +33,7 @@ class DbStorage:
 
     def put_n_post(
         self, table_name: str, data: dict, method: str = "POST"
-    ) -> Union[int, str]:
+    ) -> int | str:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if "id" not in data and self.primary_type == self.db.types.string:
             data["id"] = str(uuid.uuid4())
@@ -46,8 +45,8 @@ class DbStorage:
         return item_id
 
     def bulk_put_n_post(
-        self, table_name: str, items: List[dict], method: str = "POST"
-    ) -> List[Union[int, str]]:
+        self, table_name: str, items: list[dict], method: str = "POST"
+    ) -> list[int | str]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if self.primary_type is self.db.types.string:
             for item in items:
@@ -63,7 +62,7 @@ class DbStorage:
         ]
 
     def delete(
-        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+        self, table_name: str, where_params: list, item_id: int | str = None
     ) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if not item_id:
