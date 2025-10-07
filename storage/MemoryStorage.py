@@ -28,12 +28,16 @@ class MemoryStorage(BaseStorage):
     ) -> List[Union[int, str]]:
         return [self.put_n_post(collection_name, item, method) for item in items]
 
-    def delete(self, collection_name: str, item_id: Union[int, str] = None) -> bool:
-        if item_id:
-            collection = self.db.setdefault(collection_name, {})
-            return bool(collection.pop(item_id, None))
+    def delete(
+        self, collection_name: str, where_params: list, item_id: Union[int, str] = None
+    ) -> None:
+        if not item_id:
+            self.db.pop(collection_name, None)
         else:
-            return bool(self.db.pop(collection_name, None))
+            collection = self.db.setdefault(collection_name, {})
+            for item in list(collection.values()):
+                if all(self.fulfill_cond(item, param) for param in where_params):
+                    collection.pop(item["id"], None)
 
     def all(self) -> dict:
         return {

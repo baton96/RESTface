@@ -118,7 +118,29 @@ class RESTface:
             else:
                 raise Exception("Body has to be valid JSON")
         elif method == "DELETE":
-            self.storage.delete(collection_name, item_id)
+            params = self.get_params(request)
+            if item_id or "id" in params:
+                self.storage.delete(collection_name, [], item_id or params["id"])
+                return
+            # Filter by parent_id
+            if len(url_parts) > 2:
+                parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
+                parent_id = url_parts[-2]
+                parent_id = parse_id(parent_id)
+                params[parent_id_name] = parent_id
+
+            where_params = []
+            # Filtering by other fields
+            for param_name, param_value in params.items():
+                if "__" in param_name:
+                    param_name, op_name = param_name.split("__")
+                else:
+                    op_name = "="
+                if op_name in {"between", "notin", "in"}:
+                    param_value = re.split(", ?", str(param_value).strip("({[]})"))
+                    param_value = [parse_param(param) for param in param_value]
+                where_params += [[op_name, param_name, param_value]]
+            self.storage.delete(collection_name, where_params)
 
     def post(self, request):
         return self.handler(request, "POST")

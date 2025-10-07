@@ -53,18 +53,18 @@ class FileStorage(BaseStorage):
         )
         return [item["id"] for item in items]
 
-    def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
-        if item_id:
-            table = self.get_table(table_name)
-            try:
-                table.remove(doc_ids=[item_id])
-                return True
-            except KeyError:
-                return False
-        else:
-            existed = table_name in self.db.tables()
+    def delete(
+        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+    ) -> None:
+        if not item_id:
             self.db.drop_table(table_name)
-            return existed
+        else:
+            doc_ids = []
+            table = self.get_table(table_name)
+            for item in self.get_table(table_name).all():
+                if all(self.fulfill_cond(item, param) for param in where_params):
+                    doc_ids += [item["id"]]
+            table.remove(doc_ids=doc_ids)
 
     def all(self) -> dict:
         return {

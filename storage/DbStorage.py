@@ -62,15 +62,18 @@ class DbStorage:
             for upserted_id, item_id in zip(upserted_ids, item_ids)
         ]
 
-    def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
+    def delete(
+        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+    ) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if item_id:
-            existed = table.delete(id=item_id)
-            return existed
-        else:
-            existed = table_name in self.db.tables
+        if not item_id:
             table.drop()
-            return existed
+        else:
+            where_params = {
+                param_name: ({op_name: param_value} if param_value else {"not": None})
+                for op_name, param_name, param_value in where_params
+            }
+            table.delete(**where_params)
 
     def all(self) -> dict:
         return {

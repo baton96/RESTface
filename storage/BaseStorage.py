@@ -89,7 +89,9 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def delete(self, table_name: str, item_id: Union[int, str] = None) -> bool:
+    def delete(
+        self, table_name: str, where_params: list, item_id: Union[int, str] = None
+    ) -> None:
         pass
 
     @abstractmethod
