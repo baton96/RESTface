@@ -118,7 +118,7 @@ class RESTface:
             else:
                 raise Exception("Body has to be valid JSON")
         elif method == "DELETE":
-            return self.storage.delete(collection_name, item_id)
+            self.storage.delete(collection_name, item_id)
 
     def post(self, request):
         return self.handler(request, "POST")
