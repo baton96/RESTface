@@ -4,7 +4,7 @@ import pytest
 @pytest.fixture
 def items(face):
     for i in range(5):
-        request = {"url": f"https://example.com/users"}
+        request = {"url": "https://example.com/users"}
         face.post(request)
 
 

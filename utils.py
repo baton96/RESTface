@@ -61,10 +61,10 @@ def to_yaml(obj):
 
 
 def _to_xml(obj, tag: str) -> str:
-    if type(obj) == dict:
+    if isinstance(obj, dict):
         items = "".join(_to_xml(v, k) for k, v in obj.items())
         return f"<{tag}>{items}</{tag}>"
-    elif type(obj) == list:
+    elif isinstance(obj, list):
         return "".join(_to_xml(item, tag) for item in obj)
     else:
         return f"<{tag}>{obj}</{tag}>"
@@ -72,10 +72,10 @@ def _to_xml(obj, tag: str) -> str:
 
 def to_xml(obj, collection_name: str) -> str:
     item_name = engine.singular_noun(collection_name)
-    if type(obj) == list:
+    if isinstance(obj, list):
         items = "".join(_to_xml(item, item_name) for item in obj)
         return f"<{collection_name}>{items}</{collection_name}>"
-    elif type(obj) == dict:
+    elif isinstance(obj, dict):
         return _to_xml(obj, item_name)
     else:
         raise Exception("Cannot format to XML")
@@ -84,14 +84,14 @@ def to_xml(obj, collection_name: str) -> str:
 def flatten_dict(d, parent_key=""):
     for k, v in d.items():
         new_key = f"{parent_key}.{k}" if parent_key else k
-        if type(v) == dict:
+        if isinstance(v, dict):
             yield from dict(flatten_dict(v, new_key)).items()
         else:
             yield new_key, v
 
 
 def to_csv(obj) -> str:
-    objects = [obj] if type(obj) == dict else obj
+    objects = [obj] if isinstance(obj, dict) else obj
     objects = [dict(flatten_dict(obj)) for obj in objects]
     keys = sorted(set(key for obj in objects for key in obj.keys()))
     with StringIO() as tmp_file:
@@ -166,7 +166,7 @@ def reformat(result):
 
 def receive_file():
     file = next(iter(request.files.values()))
-    stream = file.stream.read().decode("utf-8")
+    # stream = file.stream.read().decode("utf-8")
     name = file.filename
     if name.endswith(".json"):
         pass

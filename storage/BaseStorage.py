@@ -41,7 +41,10 @@ class BaseStorage(ABC):
         if param_value:
             op = self.ops[op_name]
         else:
-            op = lambda field, _: field is not None
+
+            def op(field, _):
+                return field is not None
+
         return op(item.get(param_name), param_value)
 
     def get_without_id(
@@ -56,13 +59,15 @@ class BaseStorage(ABC):
 
         # Sorting, keep None-s and put them on the beginning of results
         order_by = meta_params["order_by"]
-        order_key = lambda item: tuple(
-            [
-                ((value := item.get(order_by_arg.lstrip("-"))) is not None, value)
-                for order_by_arg in order_by
-            ]
-            + [item["id"]]
-        )
+
+        def order_key(item):
+            return tuple(
+                [
+                    ((value := item.get(order_by_arg.lstrip("-"))) is not None, value)
+                    for order_by_arg in order_by
+                ]
+                + [item["id"]]
+            )
 
         desc = meta_params["desc"]
         items = sorted(items, key=order_key, reverse=desc)
@@ -104,10 +109,10 @@ class BaseStorage(ABC):
     def get_id(self, collection_name: str, data: dict) -> Union[int, str]:
         item_id = data.get("id")
         if not item_id:
-            if self.primary_type == int:
+            if self.primary_type is int:
                 item_ids = self.get_ids(collection_name)
                 item_id = max(item_ids or {0}) + 1
-            elif self.primary_type == str:
+            elif self.primary_type is str:
                 item_id = str(uuid.uuid4())
             data["id"] = item_id
         return item_id
@@ -115,7 +120,7 @@ class BaseStorage(ABC):
     def bulk_get_ids(
         self, collection_name: str, items: List[dict]
     ) -> List[Union[int, str]]:
-        if self.primary_type == int:
+        if self.primary_type is int:
             item_ids = self.get_ids(collection_name)
             cur_max = max(item_ids or {0}) + 1
         else:
@@ -123,10 +128,10 @@ class BaseStorage(ABC):
         for item in items:
             item_id = item.get("id")
             if not item_id:
-                if self.primary_type == int:
+                if self.primary_type is int:
                     item_id = cur_max
                     cur_max += 1
-                elif self.primary_type == str:
+                elif self.primary_type is str:
                     item_id = str(uuid.uuid4())
                 item["id"] = item_id
         item_ids = [item["id"] for item in items]

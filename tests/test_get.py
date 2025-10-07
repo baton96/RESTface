@@ -4,7 +4,7 @@ import pytest
 @pytest.fixture
 def items(face):
     for i in range(1, 5):
-        request = {"url": f"https://example.com/users"}
+        request = {"url": "https://example.com/users"}
         face.post(request)
 
 
@@ -93,7 +93,7 @@ def test_blank_param(face):
 
 def test_blank_param_no_field(face):
     for i in range(1, 5):
-        url = f"https://example.com/users"
+        url = "https://example.com/users"
         if i % 2:
             url += "?is_odd=true"
         face.post({"url": url})

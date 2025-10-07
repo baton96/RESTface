@@ -49,7 +49,7 @@ class DbStorage:
         self, table_name: str, items: List[dict], method: str = "POST"
     ) -> List[Union[int, str]]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if self.primary_type == self.db.types.string:
+        if self.primary_type is self.db.types.string:
             for item in items:
                 item.setdefault("id", str(uuid.uuid4()))
         if method == "PUT":
