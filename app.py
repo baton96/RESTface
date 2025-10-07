@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 
 from RESTface import RESTface
 from utils import reformat, receive_file
@@ -17,7 +17,7 @@ def index(path=None):
     if path is None:
         result = face.all()
     elif path == 'favicon.ico':
-        return '', 404
+        return redirect("https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png")
     else:
         body = request.get_json(force=True, silent=True) or {}
         result = face.handler({'url': path, 'body': body}, request.method)
