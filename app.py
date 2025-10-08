@@ -10,14 +10,13 @@ face = RESTface()
 
 @app.get("/favicon.ico")
 def favicon():
-    return redirect(
-        "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
-    )
+    favicon_url = "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
+    return redirect(favicon_url)
 
 
 @app.get("/openapi.json")
 def openapi():
-    return send_file("openapi.json")
+    return jsonify(face.openapi())
 
 
 @app.get("/docs")

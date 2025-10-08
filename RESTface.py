@@ -3,6 +3,8 @@ from urllib import parse
 
 from inflect import engine as get_engine
 
+from openapi import get_schema
+from storage.DbStorage import DbStorage
 from utils import get_storage, parse_param, parse_id
 
 
@@ -21,6 +23,11 @@ class RESTface:
 
     def all(self):
         return self.storage.all()
+
+    def openapi(self):
+        if not isinstance(self.storage, DbStorage):
+            raise NotImplementedError
+        return get_schema(self.storage.db, self.engine)
 
     def receive_file(self, request):
         file = next(iter(request.files.values()))
