@@ -9,7 +9,7 @@ from utils import get_storage, parse_param, parse_id
 class RESTface:
     def __init__(
         self,
-        storage_type: str = "memory",
+        storage_type: str = "db",
         storage_path: str = None,
         uuid_id: bool = False,
     ):
