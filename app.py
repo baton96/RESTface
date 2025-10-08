@@ -56,10 +56,17 @@ def index(path):
 
 @app.get("/<path:path>")
 def get(path):
-    result = face.handler({"url": path}, request.method)
+    result = face.get({"url": path})
     if "format" in request.args:
         return reformat(result)
     return jsonify(result)
+
+
+@app.post("/<path:path>")
+@app.put("/<path:path>")
+def upsert(path):
+    face.upsert({"url": path}, request.method)
+    return "", 204
 
 
 # @app.route('/upload', methods=['GET', 'POST', 'PUT', 'DELETE'])

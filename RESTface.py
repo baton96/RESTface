@@ -79,66 +79,7 @@ class RESTface:
         else:
             collection_name = str(last_part)
 
-        if method == "GET":
-            if item_id:
-                item = self.storage.get_with_id(collection_name, item_id)
-                if not item:
-                    raise NotFound
-                return item
-            else:
-                params = self.get_params(request)
-                if "id" in params:
-                    item = self.storage.get_with_id(collection_name, params["id"])
-                    return [item] if item else []
-                order_by = re.split(", ?", params.pop("order_by", "id").strip("({[]})"))
-                meta_params = {
-                    "order_by": order_by,
-                    "desc": ("desc" in params),
-                    "_limit": params.pop("limit", 0),
-                    "_offset": params.pop("offset", 0),
-                }
-                params.pop("desc", None)
-
-                # Filter by parent_id
-                if len(url_parts) > 2:
-                    parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
-                    parent_id = url_parts[-2]
-                    parent_id = parse_id(parent_id)
-                    params[parent_id_name] = parent_id
-
-                where_params = []
-                # Filtering by other fields
-                for param_name, param_value in params.items():
-                    if "__" in param_name:
-                        param_name, op_name = param_name.split("__")
-                    else:
-                        op_name = "="
-                    if op_name in {"between", "notin", "in"}:
-                        param_value = re.split(", ?", str(param_value).strip("({[]})"))
-                        param_value = [parse_param(param) for param in param_value]
-                    where_params += [[op_name, param_name, param_value]]
-
-                items = self.storage.get_without_id(
-                    collection_name, where_params, meta_params
-                )
-                return items
-
-        elif method in ("POST", "PUT"):
-            parent_info = self.create_subhierarchy(url_parts)
-            item_id = {"id": item_id} if item_id else {}
-            params = self.get_params(request)
-            body = request.get("body", {})
-            if isinstance(body, list):
-                if parent_info or params:
-                    body = [{**parent_info, **params, **item} for item in body]
-                # body.sort(key=lambda item: ('id' not in item, item.get('id')))
-                return self.storage.bulk_put_n_post(collection_name, body, method)
-            elif isinstance(body, dict):
-                data = {**parent_info, **item_id, **params, **body}
-                return self.storage.put_n_post(collection_name, data, method)
-            else:
-                raise Exception("Body has to be valid JSON")
-        elif method == "DELETE":
+        if method == "DELETE":
             params = self.get_params(request)
             if item_id or "id" in params:
                 try:
@@ -169,14 +110,30 @@ class RESTface:
                 where_params += [[op_name, param_name, param_value]]
             self.storage.delete_without_id(collection_name, where_params)
 
-    def post(self, request):
-        return self.handler(request, "POST")
+    def upsert(self, request, method):
+        path = parse.urlsplit(request["url"]).path
+        url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
+        item_id = parse_id(url_parts[-1])
+        collection_name = str(url_parts[-2 if item_id else -1])
+
+        parent_info = self.create_subhierarchy(url_parts)
+        params = self.get_params(request)
+        body = request.get("body", {})
+        if isinstance(body, list):
+            if parent_info or params:
+                body = [{**parent_info, **params, **item} for item in body]
+            return self.storage.bulk_put_n_post(collection_name, body, method)
+        elif isinstance(body, dict):
+            item_id = {"id": item_id} if item_id else {}
+            data = {**parent_info, **item_id, **params, **body}
+            return self.storage.put_n_post(collection_name, data, method)
+        else:
+            raise Exception("Body has to be valid JSON")
 
     def get(self, request):
         path = parse.urlsplit(request["url"]).path
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
-        last_part = url_parts[-1]
-        item_id = parse_id(last_part)
+        item_id = parse_id(url_parts[-1])
         if item_id:
             collection_name = str(url_parts[-2])
             item = self.storage.get_with_id(collection_name, item_id)
@@ -184,7 +141,7 @@ class RESTface:
                 raise NotFound
             return item
 
-        collection_name = str(last_part)
+        collection_name = str(url_parts[-1])
         params = self.get_params(request)
         if "id" in params:
             item = self.storage.get_with_id(collection_name, params["id"])
@@ -220,8 +177,11 @@ class RESTface:
         items = self.storage.get_without_id(collection_name, where_params, meta_params)
         return items
 
+    def post(self, request):
+        return self.upsert(request, "POST")
+
     def put(self, request):
-        return self.handler(request, "PUT")
+        return self.upsert(request, "PUT")
 
     def delete(self, request):
         return self.handler(request, "DELETE")
