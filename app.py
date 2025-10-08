@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify, redirect
-
+from flask import Flask, request, jsonify, redirect, send_file
 from RESTface import RESTface
-from utils import reformat, receive_file
+from utils import reformat
 
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
@@ -9,20 +8,44 @@ app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 face = RESTface()
 
 
+@app.get("/favicon.ico")
+def favicon():
+    return redirect(
+        "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
+    )
+
+
+@app.get("/openapi.json")
+def openapi():
+    return send_file("openapi.json")
+
+
+@app.get("/docs")
+def docs():
+    return send_file("docs.html")
+
+
+@app.get("/")
+def get_all():
+    return jsonify(face.all())
+
+
+@app.post("/")
+def receive_file():
+    face.receive_file(request)
+    return "", 204
+
+
+@app.delete("/")
+def reset():
+    face.reset()
+    return "", 204
+
+
 @app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
-@app.route("/", methods=["GET", "POST", "PUT", "DELETE"])
-def index(path=None):
-    if request.files:
-        receive_file()
-    if path is None:
-        result = face.all()
-    elif path == "favicon.ico":
-        return redirect(
-            "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
-        )
-    else:
-        body = request.get_json(force=True, silent=True) or {}
-        result = face.handler({"url": path, "body": body}, request.method)
+def index_path(path=None):
+    body = request.get_json(force=True, silent=True) or {}
+    result = face.handler({"url": path, "body": body}, request.method)
     if request.method == "DELETE":
         return "", 204
     if "format" in request.args:
@@ -37,7 +60,8 @@ def upload():
             <form method=post enctype=multipart/form-data>
                 <input type=file name=file123 multiple>
                 <input type=submit value=Upload>
-            </form>"""
+            </form>
+        """
     else:
         if request.files:
             file = next(iter(request.files.values()))

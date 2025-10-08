@@ -22,6 +22,19 @@ class RESTface:
     def all(self):
         return self.storage.all()
 
+    def receive_file(self, request):
+        file = next(iter(request.files.values()))
+        # stream = file.stream.read().decode("utf-8")
+        name = file.filename
+        if name.endswith(".json"):
+            pass
+        elif name.endswith(".csv"):
+            pass
+        elif name.endswith(".xml"):
+            pass
+        elif name.endswith(".yaml"):
+            pass
+
     def create_subhierarchy(self, parts) -> dict:
         parent_info = {}
         for i, part in enumerate(parts):
@@ -102,7 +115,7 @@ class RESTface:
                 )
                 return items
 
-        elif method in {"POST", "PUT"}:
+        elif method in ("POST", "PUT"):
             parent_info = self.create_subhierarchy(url_parts)
             item_id = {"id": item_id} if item_id else {}
             params = self.get_params(request)

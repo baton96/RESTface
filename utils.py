@@ -162,17 +162,3 @@ def reformat(result):
         return Response(to_yaml(result), mimetype="text/yaml")
     else:
         return jsonify(result)
-
-
-def receive_file():
-    file = next(iter(request.files.values()))
-    # stream = file.stream.read().decode("utf-8")
-    name = file.filename
-    if name.endswith(".json"):
-        pass
-    elif name.endswith(".csv"):
-        pass
-    elif name.endswith(".xml"):
-        pass
-    elif name.endswith(".yaml"):
-        pass
