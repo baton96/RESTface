@@ -16,9 +16,7 @@ class FileStorage(BaseStorage):
         table = self.get_table(table_name)
         return table.get(doc_id=item_id)
 
-    def put_n_post(
-        self, table_name: str, data: dict, method: str = "POST"
-    ) -> int | str:
+    def upsert(self, table_name: str, data: dict, method: str = "POST") -> int | str:
         item_id = self.get_id(table_name, data)
         table = self.get_table(table_name)
         if method == "PUT":
@@ -29,7 +27,7 @@ class FileStorage(BaseStorage):
         table.upsert(tinydb.table.Document(data, doc_id=item_id))
         return item_id
 
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, table_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
         table = self.get_table(table_name)

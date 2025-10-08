@@ -75,13 +75,11 @@ class BaseStorage(ABC):
         return items[offset : offset + limit]
 
     @abstractmethod
-    def put_n_post(
-        self, table_name: str, data: dict, method: str = "POST"
-    ) -> int | str:
+    def upsert(self, table_name: str, data: dict, method: str = "POST") -> int | str:
         pass
 
     # @abstractmethod
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, table_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
         pass

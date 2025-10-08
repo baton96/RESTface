@@ -31,9 +31,7 @@ class DbStorage:
         items = list(table.find(**params))
         return items
 
-    def put_n_post(
-        self, table_name: str, data: dict, method: str = "POST"
-    ) -> int | str:
+    def upsert(self, table_name: str, data: dict, method: str = "POST") -> int | str:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
         if "id" not in data and self.primary_type == self.db.types.string:
             data["id"] = str(uuid.uuid4())
@@ -44,7 +42,7 @@ class DbStorage:
             item_id = data["id"]
         return item_id
 
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, table_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
         table = self.db.get_table(table_name, primary_type=self.primary_type)

@@ -17,7 +17,7 @@ class RedisStorage(BaseStorage):
         }
         return item
 
-    def put_n_post(
+    def upsert(
         self, collection_name: str, data: dict, method: str = "POST"
     ) -> int | str:
         item_id = self.get_id(collection_name, data)
@@ -29,7 +29,7 @@ class RedisStorage(BaseStorage):
         self.db.sadd(collection_name, item_id)
         return item_id
 
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, collection_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
         self.bulk_get_ids(collection_name, items)

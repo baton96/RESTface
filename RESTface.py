@@ -53,7 +53,7 @@ class RESTface:
                     raise Exception("Invalid path")
                 data = {"id": item_id, **parent_info}
                 if i != len(parts) - 1:
-                    self.storage.put_n_post(collection_name, data, "POST")
+                    self.storage.upsert(collection_name, data, "POST")
                     parent_info = {
                         self.engine.singular_noun(parts[i - 1]) + "_id": item_id
                     }
@@ -102,11 +102,11 @@ class RESTface:
         if isinstance(body, list):
             if parent_info or params:
                 body = [{**parent_info, **params, **item} for item in body]
-            return self.storage.bulk_put_n_post(collection_name, body, method)
+            return self.storage.bulk_upsert(collection_name, body, method)
         elif isinstance(body, dict):
             item_id = {"id": item_id} if item_id else {}
             data = {**parent_info, **item_id, **params, **body}
-            return self.storage.put_n_post(collection_name, data, method)
+            return self.storage.upsert(collection_name, data, method)
         else:
             raise Exception("Body has to be valid JSON")
 

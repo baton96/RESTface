@@ -10,7 +10,7 @@ class MemoryStorage(BaseStorage):
         collection = self.db.get(collection_name, {})
         return collection.get(item_id)
 
-    def put_n_post(
+    def upsert(
         self, collection_name: str, data: dict, method: str = "POST"
     ) -> int | str:
         collection = self.db.setdefault(collection_name, {})
@@ -21,10 +21,10 @@ class MemoryStorage(BaseStorage):
             collection[item_id] = data
         return item_id
 
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, collection_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
-        return [self.put_n_post(collection_name, item, method) for item in items]
+        return [self.upsert(collection_name, item, method) for item in items]
 
     def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
         collection = self.db.setdefault(collection_name, {})

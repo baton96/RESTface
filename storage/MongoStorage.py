@@ -71,7 +71,7 @@ class MongoStorage(BaseStorage):
             for item in results
         ]
 
-    def put_n_post(
+    def upsert(
         self, collection_name: str, data: dict, method: str = "POST"
     ) -> int | str:
         item_id = self.get_id(collection_name, data)
@@ -84,7 +84,7 @@ class MongoStorage(BaseStorage):
             upserted_item = collection.replace_one({"_id": item_id}, data, upsert=True)
         return upserted_item.upserted_id or item_id
 
-    def bulk_put_n_post(
+    def bulk_upsert(
         self, collection_name: str, items: list[dict], method: str = "POST"
     ) -> list[int | str]:
         self.bulk_get_ids(collection_name, items)
