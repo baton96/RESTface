@@ -90,10 +90,7 @@ class RESTface:
                 if "id" in params:
                     item = self.storage.get_with_id(collection_name, params["id"])
                     return [item] if item else []
-                order_by = (
-                    params.pop("order_by", None) or params.pop("sort", None) or "id"
-                )
-                order_by = re.split(", ?", order_by.strip("({[]})"))
+                order_by = re.split(", ?", params.pop("order_by", "id").strip("({[]})"))
                 meta_params = {
                     "order_by": order_by,
                     "desc": ("desc" in params),
@@ -176,7 +173,52 @@ class RESTface:
         return self.handler(request, "POST")
 
     def get(self, request):
-        return self.handler(request, "GET")
+        path = parse.urlsplit(request["url"]).path
+        url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
+        last_part = url_parts[-1]
+        item_id = parse_id(last_part)
+        if item_id:
+            collection_name = str(url_parts[-2])
+            item = self.storage.get_with_id(collection_name, item_id)
+            if not item:
+                raise NotFound
+            return item
+
+        collection_name = str(last_part)
+        params = self.get_params(request)
+        if "id" in params:
+            item = self.storage.get_with_id(collection_name, params["id"])
+            return [item] if item else []
+        order_by = re.split(", ?", params.pop("order_by", "id").strip("({[]})"))
+        meta_params = {
+            "order_by": order_by,
+            "desc": ("desc" in params),
+            "_limit": params.pop("limit", 0),
+            "_offset": params.pop("offset", 0),
+        }
+        params.pop("desc", None)
+
+        # Filter by parent_id
+        if len(url_parts) > 2:
+            parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
+            parent_id = url_parts[-2]
+            parent_id = parse_id(parent_id)
+            params[parent_id_name] = parent_id
+
+        where_params = []
+        # Filtering by other fields
+        for param_name, param_value in params.items():
+            if "__" in param_name:
+                param_name, op_name = param_name.split("__")
+            else:
+                op_name = "="
+            if op_name in {"between", "notin", "in"}:
+                param_value = re.split(", ?", str(param_value).strip("({[]})"))
+                param_value = [parse_param(param) for param in param_value]
+            where_params += [[op_name, param_name, param_value]]
+
+        items = self.storage.get_without_id(collection_name, where_params, meta_params)
+        return items
 
     def put(self, request):
         return self.handler(request, "PUT")

@@ -43,12 +43,20 @@ def reset():
     return "", 204
 
 
-@app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
-def index_path(path=None):
+@app.route("/<path:path>", methods=["POST", "PUT", "DELETE"])
+def index(path):
     body = request.get_json(force=True, silent=True) or {}
     result = face.handler({"url": path, "body": body}, request.method)
     if request.method == "DELETE":
         return "", 204
+    if "format" in request.args:
+        return reformat(result)
+    return jsonify(result)
+
+
+@app.get("/<path:path>")
+def get(path):
+    result = face.handler({"url": path}, request.method)
     if "format" in request.args:
         return reformat(result)
     return jsonify(result)

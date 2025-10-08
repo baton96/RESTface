@@ -33,6 +33,7 @@ optional arguments:
 
 - **Example app using RESTface**
 - Better (separate) methods handler
+- Better format handler
 - Persistent db dump
 - Type hints (mypy?)
 - Graph database storage
