@@ -69,46 +69,26 @@ class RESTface:
         }
         return params
 
-    def handler(self, request, method):
-        path = parse.urlsplit(request["url"]).path
-        url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
-        last_part = url_parts[-1]
-        item_id = parse_id(last_part)
-        if item_id:
-            collection_name = str(url_parts[-2])
-        else:
-            collection_name = str(last_part)
+    def get_where_params(self, url_parts, params):
+        # Filter by parent_id
+        if len(url_parts) > 2:
+            parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
+            parent_id = url_parts[-2]
+            parent_id = parse_id(parent_id)
+            params[parent_id_name] = parent_id
 
-        if method == "DELETE":
-            params = self.get_params(request)
-            if item_id or "id" in params:
-                try:
-                    self.storage.delete_with_id(
-                        collection_name, item_id or params["id"]
-                    )
-                    return
-                except Exception:
-                    raise NotFound
-
-            # Filter by parent_id
-            if len(url_parts) > 2:
-                parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
-                parent_id = url_parts[-2]
-                parent_id = parse_id(parent_id)
-                params[parent_id_name] = parent_id
-
-            where_params = []
-            # Filtering by other fields
-            for param_name, param_value in params.items():
-                if "__" in param_name:
-                    param_name, op_name = param_name.split("__")
-                else:
-                    op_name = "="
-                if op_name in {"between", "notin", "in"}:
-                    param_value = re.split(", ?", str(param_value).strip("({[]})"))
-                    param_value = [parse_param(param) for param in param_value]
-                where_params += [[op_name, param_name, param_value]]
-            self.storage.delete_without_id(collection_name, where_params)
+        where_params = []
+        # Filtering by other fields
+        for param_name, param_value in params.items():
+            if "__" in param_name:
+                param_name, op_name = param_name.split("__")
+            else:
+                op_name = "="
+            if op_name in {"between", "notin", "in"}:
+                param_value = re.split(", ?", str(param_value).strip("({[]})"))
+                param_value = [parse_param(param) for param in param_value]
+            where_params += [[op_name, param_name, param_value]]
+        return where_params
 
     def upsert(self, request, method):
         path = parse.urlsplit(request["url"]).path
@@ -135,17 +115,12 @@ class RESTface:
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
         item_id = parse_id(url_parts[-1])
         if item_id:
-            collection_name = str(url_parts[-2])
-            item = self.storage.get_with_id(collection_name, item_id)
+            item = self.storage.get_with_id(str(url_parts[-2]), item_id)
             if not item:
                 raise NotFound
             return item
 
-        collection_name = str(url_parts[-1])
         params = self.get_params(request)
-        if "id" in params:
-            item = self.storage.get_with_id(collection_name, params["id"])
-            return [item] if item else []
         order_by = re.split(", ?", params.pop("order_by", "id").strip("({[]})"))
         meta_params = {
             "order_by": order_by,
@@ -154,28 +129,10 @@ class RESTface:
             "_offset": params.pop("offset", 0),
         }
         params.pop("desc", None)
-
-        # Filter by parent_id
-        if len(url_parts) > 2:
-            parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"
-            parent_id = url_parts[-2]
-            parent_id = parse_id(parent_id)
-            params[parent_id_name] = parent_id
-
-        where_params = []
-        # Filtering by other fields
-        for param_name, param_value in params.items():
-            if "__" in param_name:
-                param_name, op_name = param_name.split("__")
-            else:
-                op_name = "="
-            if op_name in {"between", "notin", "in"}:
-                param_value = re.split(", ?", str(param_value).strip("({[]})"))
-                param_value = [parse_param(param) for param in param_value]
-            where_params += [[op_name, param_name, param_value]]
-
-        items = self.storage.get_without_id(collection_name, where_params, meta_params)
-        return items
+        where_params = self.get_where_params(url_parts, params)
+        return self.storage.get_without_id(
+            str(url_parts[-1]), where_params, meta_params
+        )
 
     def post(self, request):
         return self.upsert(request, "POST")
@@ -184,4 +141,12 @@ class RESTface:
         return self.upsert(request, "PUT")
 
     def delete(self, request):
-        return self.handler(request, "DELETE")
+        path = parse.urlsplit(request["url"]).path
+        url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
+        item_id = parse_id(url_parts[-1])
+        if item_id:
+            if not self.storage.delete_with_id(str(url_parts[-2]), item_id):
+                raise NotFound
+        else:
+            where_params = self.get_where_params(url_parts, self.get_params(request))
+            self.storage.delete_without_id(str(url_parts[-1]), where_params)

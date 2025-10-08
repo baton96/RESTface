@@ -43,17 +43,6 @@ def reset():
     return "", 204
 
 
-@app.route("/<path:path>", methods=["POST", "PUT", "DELETE"])
-def index(path):
-    body = request.get_json(force=True, silent=True) or {}
-    result = face.handler({"url": path, "body": body}, request.method)
-    if request.method == "DELETE":
-        return "", 204
-    if "format" in request.args:
-        return reformat(result)
-    return jsonify(result)
-
-
 @app.get("/<path:path>")
 def get(path):
     result = face.get({"url": path})
@@ -66,6 +55,12 @@ def get(path):
 @app.put("/<path:path>")
 def upsert(path):
     face.upsert({"url": path}, request.method)
+    return "", 204
+
+
+@app.delete("/<path:path>")
+def delete(path):
+    face.delete({"url": path})
     return "", 204
 
 

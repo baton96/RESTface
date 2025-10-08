@@ -28,7 +28,7 @@ class MemoryStorage(BaseStorage):
 
     def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
         collection = self.db.setdefault(collection_name, {})
-        collection.pop(doc_id)
+        return collection.pop(doc_id, None)
 
     def delete_without_id(self, collection_name: str, where_params: list) -> None:
         if where_params:

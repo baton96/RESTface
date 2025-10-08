@@ -44,11 +44,9 @@ class RedisStorage(BaseStorage):
         return [item["id"] for item in items]
 
     def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
-        if not (
-            self.db.delete(f"{collection_name}:{doc_id}")
-            and self.db.srem(collection_name, doc_id)
-        ):
-            raise
+        return self.db.delete(f"{collection_name}:{doc_id}") and self.db.srem(
+            collection_name, doc_id
+        )
 
     def delete_without_id(self, collection_name: str, where_params: list) -> None:
         if where_params:

@@ -63,8 +63,7 @@ class DbStorage:
 
     def delete_with_id(self, table_name: str, item_id: int | str) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if not table.delete(id=item_id):
-            raise
+        return table.delete(id=item_id)
 
     def delete_without_id(self, table_name: str, where_params: list) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
