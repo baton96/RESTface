@@ -10,7 +10,7 @@ class DbStorage:
 
     def get_with_id(self, table_name: str, item_id: int | str) -> dict:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        return table.find_one(id=item_id) or {}
+        return table.find_one(id=item_id)
 
     def get_without_id(
         self, table_name: str, where_params: list, meta_params: dict

@@ -14,7 +14,7 @@ class FileStorage(BaseStorage):
 
     def get_with_id(self, table_name: str, item_id: int | str) -> dict:
         table = self.get_table(table_name)
-        return table.get(doc_id=item_id) or {}
+        return table.get(doc_id=item_id)
 
     def put_n_post(
         self, table_name: str, data: dict, method: str = "POST"

@@ -2,6 +2,7 @@ import re
 from urllib import parse
 
 from inflect import engine as get_engine
+from werkzeug.exceptions import NotFound
 
 from openapi import get_schema
 from storage.DbStorage import DbStorage
@@ -80,7 +81,10 @@ class RESTface:
 
         if method == "GET":
             if item_id:
-                return self.storage.get_with_id(collection_name, item_id)
+                item = self.storage.get_with_id(collection_name, item_id)
+                if not item:
+                    raise NotFound
+                return item
             else:
                 params = self.get_params(request)
                 if "id" in params:

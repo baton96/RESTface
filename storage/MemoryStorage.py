@@ -8,7 +8,7 @@ class MemoryStorage(BaseStorage):
 
     def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
         collection = self.db.get(collection_name, {})
-        return collection.get(item_id, {})
+        return collection.get(item_id)
 
     def put_n_post(
         self, collection_name: str, data: dict, method: str = "POST"

@@ -32,7 +32,9 @@ optional arguments:
 # Ideas:
 
 - **Example app using RESTface**
-- Exception on nonexisting GET/DELETE
+- Exception on nonexisting DELETE
+- Better (separate) methods handler
+- Persistent db dump
 - Type hints (mypy?)
 - Graph database storage
 - Authorization
