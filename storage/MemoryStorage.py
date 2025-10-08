@@ -29,7 +29,7 @@ class MemoryStorage(BaseStorage):
     def delete(
         self, collection_name: str, where_params: list, item_id: int | str = None
     ) -> None:
-        if not item_id:
+        if not (item_id or where_params):
             self.db.pop(collection_name, None)
         else:
             collection = self.db.setdefault(collection_name, {})

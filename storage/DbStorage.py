@@ -65,7 +65,7 @@ class DbStorage:
         self, table_name: str, where_params: list, item_id: int | str = None
     ) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if not item_id:
+        if not (item_id or where_params):
             table.drop()
         else:
             where_params = {

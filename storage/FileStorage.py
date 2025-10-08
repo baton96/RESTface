@@ -54,7 +54,7 @@ class FileStorage(BaseStorage):
     def delete(
         self, table_name: str, where_params: list, item_id: int | str = None
     ) -> None:
-        if not item_id:
+        if not (item_id or where_params):
             self.db.drop_table(table_name)
         else:
             doc_ids = []
