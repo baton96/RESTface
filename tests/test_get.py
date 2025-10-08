@@ -1,4 +1,5 @@
 import pytest
+from werkzeug.exceptions import NotFound
 
 
 @pytest.fixture
@@ -147,6 +148,13 @@ def test_only_names(face):
     assert face.get(request) == []
 
 
-def test_only_ids(face, items):
+def test_only_ids(face):
     request = {"url": "https://example.com/1/2"}
-    assert face.get(request) == {}
+    with pytest.raises(NotFound):
+        face.get(request)
+
+
+def test_nonexisting(face):
+    request = {"url": "https://example.com/users/1"}
+    with pytest.raises(NotFound):
+        face.get(request)

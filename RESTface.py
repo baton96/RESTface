@@ -144,8 +144,14 @@ class RESTface:
         elif method == "DELETE":
             params = self.get_params(request)
             if item_id or "id" in params:
-                self.storage.delete_with_id(collection_name, item_id or params["id"])
-                return
+                try:
+                    self.storage.delete_with_id(
+                        collection_name, item_id or params["id"]
+                    )
+                    return
+                except Exception:
+                    raise NotFound
+
             # Filter by parent_id
             if len(url_parts) > 2:
                 parent_id_name = self.engine.singular_noun(url_parts[-3]) + "_id"

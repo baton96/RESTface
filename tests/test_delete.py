@@ -1,3 +1,7 @@
+import pytest
+from werkzeug.exceptions import NotFound
+
+
 def test_delete_one_existing(face):
     request = {"url": "https://example.com/users/1"}
     assert face.post(request) == 1
@@ -5,12 +9,10 @@ def test_delete_one_existing(face):
     assert face.all() == {"users": []}
 
 
-def test_delete_one_nonexisting(face):
+def test_delete_nonexisting(face):
     request = {"url": "https://example.com/users/1"}
-    assert face.post(request) == 1
-    face.delete(request)
-    face.delete(request)
-    assert face.all() == {"users": []}
+    with pytest.raises(NotFound):
+        face.delete(request)
 
 
 def test_delete_all_existing(face):

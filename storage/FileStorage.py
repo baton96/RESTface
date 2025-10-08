@@ -53,10 +53,7 @@ class FileStorage(BaseStorage):
 
     def delete_with_id(self, table_name: str, doc_id: int | str) -> None:
         table = self.get_table(table_name)
-        try:
-            table.remove(doc_ids=[doc_id])
-        except KeyError:
-            pass
+        table.remove(doc_ids=[doc_id])
 
     def delete_without_id(self, table_name: str, where_params: list) -> None:
         if where_params:
