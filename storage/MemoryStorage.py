@@ -26,16 +26,18 @@ class MemoryStorage(BaseStorage):
     ) -> list[int | str]:
         return [self.put_n_post(collection_name, item, method) for item in items]
 
-    def delete(
-        self, collection_name: str, where_params: list, item_id: int | str = None
-    ) -> None:
-        if not (item_id or where_params):
-            self.db.pop(collection_name, None)
-        else:
+    def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
+        collection = self.db.setdefault(collection_name, {})
+        collection.pop(doc_id, None)
+
+    def delete_without_id(self, collection_name: str, where_params: list) -> None:
+        if where_params:
             collection = self.db.setdefault(collection_name, {})
             for item in list(collection.values()):
                 if all(self.fulfill_cond(item, param) for param in where_params):
                     collection.pop(item["id"], None)
+        else:
+            self.db.pop(collection_name, None)
 
     def all(self) -> dict:
         return {

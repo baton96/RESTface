@@ -52,10 +52,7 @@ class BaseStorage(ABC):
         items = [
             item
             for item in self.get_items(table_name)
-            if all(
-                self.fulfill_cond(item, param)
-                for param in where_params
-            )
+            if all(self.fulfill_cond(item, param) for param in where_params)
         ]
 
         # Sorting, keep None-s and put them on the beginning of results
@@ -90,9 +87,11 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    def delete(
-        self, table_name: str, where_params: list, item_id: int | str = None
-    ) -> None:
+    def delete_with_id(self, table_name: str, item_id: int | str) -> None:
+        pass
+
+    @abstractmethod
+    def delete_without_id(self, table_name: str, where_params: list) -> None:
         pass
 
     @abstractmethod

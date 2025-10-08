@@ -32,6 +32,8 @@ optional arguments:
 # Ideas:
 
 - **Example app using RESTface**
+- Exception on nonexisting GET/DELETE
+- Type hints (mypy?)
 - Graph database storage
 - Authorization
 - Receiving files

@@ -140,7 +140,7 @@ class RESTface:
         elif method == "DELETE":
             params = self.get_params(request)
             if item_id or "id" in params:
-                self.storage.delete(collection_name, [], item_id or params["id"])
+                self.storage.delete_with_id(collection_name, item_id or params["id"])
                 return
             # Filter by parent_id
             if len(url_parts) > 2:
@@ -160,7 +160,7 @@ class RESTface:
                     param_value = re.split(", ?", str(param_value).strip("({[]})"))
                     param_value = [parse_param(param) for param in param_value]
                 where_params += [[op_name, param_name, param_value]]
-            self.storage.delete(collection_name, where_params)
+            self.storage.delete_without_id(collection_name, where_params)
 
     def post(self, request):
         return self.handler(request, "POST")

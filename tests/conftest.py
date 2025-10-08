@@ -6,11 +6,11 @@ import RESTface
 @pytest.fixture(
     autouse=True,
     params=[
-        # "memory",
-        # "file",
-        # "db",
+        "memory",
+        "file",
+        "db",
         # 'mongo',
-        'redis',
+        "redis",
     ],
 )
 def face(request):

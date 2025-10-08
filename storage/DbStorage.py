@@ -61,18 +61,20 @@ class DbStorage:
             for upserted_id, item_id in zip(upserted_ids, item_ids)
         ]
 
-    def delete(
-        self, table_name: str, where_params: list, item_id: int | str = None
-    ) -> None:
+    def delete_with_id(self, table_name: str, item_id: int | str) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if not (item_id or where_params):
-            table.drop()
-        else:
+        table.delete(id=item_id)
+
+    def delete_without_id(self, table_name: str, where_params: list) -> None:
+        table = self.db.get_table(table_name, primary_type=self.primary_type)
+        if where_params:
             where_params = {
                 param_name: ({op_name: param_value} if param_value else {"not": None})
                 for op_name, param_name, param_value in where_params
             }
             table.delete(**where_params)
+        else:
+            table.drop()
 
     def all(self) -> dict:
         return {
