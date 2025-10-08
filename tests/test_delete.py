@@ -29,7 +29,7 @@ def test_delete_all_nonexisting(face):
 
 
 def test_delete_one_where_cond(face):
-    request = {"url": "https://example.com/users?id=1"}
+    request = {"url": "https://example.com/users?name=myname"}
     assert face.post(request) == 1
     face.delete(request)
     assert face.all() == {"users": []}

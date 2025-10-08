@@ -49,11 +49,13 @@ class BaseStorage(ABC):
     def get_without_id(
         self, table_name: str, where_params: list, meta_params: dict
     ) -> list:
-        items = self.get_items(table_name)
         items = [
             item
-            for item in items
-            if all(self.fulfill_cond(item, param) for param in where_params)
+            for item in self.get_items(table_name)
+            if all(
+                self.fulfill_cond(item, param)
+                for param in where_params
+            )
         ]
 
         # Sorting, keep None-s and put them on the beginning of results

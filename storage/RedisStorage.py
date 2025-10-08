@@ -43,16 +43,24 @@ class RedisStorage(BaseStorage):
         self.db.sadd("collections", collection_name)
         return [item["id"] for item in items]
 
-    def delete(self, collection_name: str, item_id: int | str = None):
-        if item_id:
-            self.db.delete(f"{collection_name}:{item_id}")
-            self.db.srem(collection_name, item_id)
-        else:
+    def delete(
+        self, collection_name: str, where_params: list, item_id: int | str = None,
+    ):
+        if not (item_id or where_params):
             item_ids = self.db.smembers(collection_name)
             for item_id in item_ids:
                 self.db.delete(f"{collection_name}:{item_id}")
             self.db.srem("collections", collection_name)
             self.db.delete(collection_name)
+        else:
+            item_ids = [
+                item["id"]
+                for item in self.get_items(collection_name)
+                if all(self.fulfill_cond(item, param) for param in where_params)
+            ]
+            if item_ids:
+                self.db.delete(*(f"{collection_name}:{item_id}" for item_id in item_ids))
+                self.db.srem(collection_name, *item_ids)
 
     def all(self):
         items = {
