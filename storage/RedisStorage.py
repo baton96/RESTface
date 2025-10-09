@@ -5,7 +5,7 @@ from .BaseStorage import BaseStorage
 
 
 class RedisStorage(BaseStorage):
-    def __init__(self, _: str = None, uuid_id: bool = False):
+    def __init__(self, _: str | None = None, uuid_id: bool = False):
         super().__init__()
         self.db = redis.Redis(decode_responses=True)
         self.primary_type = str if uuid_id else int
@@ -13,7 +13,7 @@ class RedisStorage(BaseStorage):
     def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
         item = {
             k: self.decode(v)
-            for k, v in (self.db.hgetall(f"{collection_name}:{item_id}") or {}).items()
+            for k, v in (self.db.hgetall(f"{collection_name}:{item_id}") or {}).items()  # type: ignore[union-attr]
         }
         return item
 
@@ -43,9 +43,10 @@ class RedisStorage(BaseStorage):
         self.db.sadd("collections", collection_name)
         return [item["id"] for item in items]
 
-    def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
-        return self.db.delete(f"{collection_name}:{doc_id}") and self.db.srem(
-            collection_name, doc_id
+    def delete_with_id(self, collection_name: str, doc_id: int | str) -> bool:
+        return bool(
+            self.db.delete(f"{collection_name}:{doc_id}")
+            and self.db.srem(collection_name, doc_id)
         )
 
     def delete_without_id(self, collection_name: str, where_params: list) -> None:
@@ -61,10 +62,10 @@ class RedisStorage(BaseStorage):
                 )
                 self.db.srem(collection_name, *item_ids)
         else:
-            item_ids = self.db.smembers(collection_name)
-            if item_ids:
+            members = self.db.smembers(collection_name)
+            if members:
                 self.db.delete(
-                    *(f"{collection_name}:{item_id}" for item_id in item_ids)
+                    *(f"{collection_name}:{item_id}" for item_id in members)  # type: ignore[union-attr]
                 )
                 self.db.srem("collections", collection_name)
                 self.db.delete(collection_name)
@@ -90,17 +91,17 @@ class RedisStorage(BaseStorage):
     def reset(self) -> None:
         self.db.flushdb()
 
-    def get_ids(self, collection_name: str) -> set:
-        item_ids = {
+    def get_ids(self, collection_name: str) -> list[int | str]:
+        item_ids = [
             int(item_id) if item_id.isdigit() else item_id
-            for item_id in self.db.smembers(collection_name)
-        }
+            for item_id in self.db.smembers(collection_name)  # type: ignore[union-attr]
+        ]
         return item_ids
 
     def get_items(self, collection_name) -> list[dict]:
         items = [
             self.get_with_id(collection_name, item_id)
-            for item_id in self.db.smembers(collection_name)
+            for item_id in self.db.smembers(collection_name)  # type: ignore[union-attr]
         ]
         return items
 

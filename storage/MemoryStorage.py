@@ -1,14 +1,16 @@
+from typing import Any
+
 from .BaseStorage import BaseStorage
 
 
 class MemoryStorage(BaseStorage):
     def __init__(self, uuid_id: bool = False):
         super().__init__(None, uuid_id)
-        self.db = {}
+        self.db: dict[str, dict[int | str, dict[str, Any]]] = {}
 
     def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
         collection = self.db.get(collection_name, {})
-        return collection.get(item_id)
+        return collection.get(item_id, {})
 
     def upsert(
         self, collection_name: str, data: dict, method: str = "POST"
@@ -26,9 +28,9 @@ class MemoryStorage(BaseStorage):
     ) -> list[int | str]:
         return [self.upsert(collection_name, item, method) for item in items]
 
-    def delete_with_id(self, collection_name: str, doc_id: int | str) -> None:
+    def delete_with_id(self, collection_name: str, doc_id: int | str) -> bool:
         collection = self.db.setdefault(collection_name, {})
-        return collection.pop(doc_id, None)
+        return bool(collection.pop(doc_id, None))
 
     def delete_without_id(self, collection_name: str, where_params: list) -> None:
         if where_params:
@@ -48,9 +50,9 @@ class MemoryStorage(BaseStorage):
     def reset(self) -> None:
         self.db = {}
 
-    def get_ids(self, collection_name: str) -> set:
+    def get_ids(self, collection_name: str) -> list[int | str]:
         collection = self.db.setdefault(collection_name, {})
-        return set(collection.keys())
+        return list(collection.keys())
 
     def get_items(self, collection_name: str) -> list[dict]:
         collection = self.db.setdefault(collection_name, {})

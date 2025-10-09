@@ -1,32 +1,22 @@
 import pymongo
-from pymongo import UpdateOne, ReplaceOne
 
 from .BaseStorage import BaseStorage
 
 
 class MongoStorage(BaseStorage):
     def __init__(
-        self, storage_path: str = "mongodb://localhost:27017", uuid_id: bool = False
+        self,
+        storage_path: str | None = "mongodb://localhost:27017",
+        uuid_id: bool = False,
     ):
-        self.db = pymongo.MongoClient(storage_path).db
+        self.db: pymongo.database.Database = pymongo.MongoClient(storage_path).db
         self.primary_type = str if uuid_id else int
 
-    def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
-        collection = self.db[collection_name]
-        return {
-            (k if k != "_id" else "id"): v
-            for k, v in (collection.find_one({"_id": item_id}) or {}).items()
-        }
-
-    def get_without_id(
-        self, collection_name: str, where_params_raw: list, meta_params: dict
-    ) -> list:
-        collection = self.db[collection_name]
+    def get_where_params(self, where_params_raw):
         where_params = {}
         for op_name, param_name, param_value in where_params_raw:
             if param_name == "id":
                 param_name = "_id"
-
             if op_name == "=":
                 if param_value == "":
                     where_params[param_name] = {"$exists": True}
@@ -49,23 +39,33 @@ class MongoStorage(BaseStorage):
                 where_params[param_name] = {"$nin": param_value}
             else:
                 where_params[param_name] = {("$" + op_name): param_value}
+        return where_params
 
-        desc = meta_params["desc"]
-        order_by = meta_params["order_by"]
+    def get_with_id(self, collection_name: str, item_id: int | str) -> dict:
+        collection = self.db[collection_name]
+        return {
+            (k if k != "_id" else "id"): v
+            for k, v in (collection.find_one({"_id": item_id}) or {}).items()
+        }
+
+    def get_without_id(
+        self, collection_name: str, where_params_list: list, meta_params: dict
+    ) -> list:
+        collection = self.db[collection_name]
+        where_params_dict = self.get_where_params(where_params_list)
         order_key = [
             (
                 order_by_arg if order_by_arg != "id" else "_id",
-                pymongo.DESCENDING if desc else pymongo.ASCENDING,
+                pymongo.DESCENDING if meta_params["desc"] else pymongo.ASCENDING,
             )
-            for order_by_arg in order_by
+            for order_by_arg in meta_params["order_by"]
         ]
         results = collection.find(
-            filter=where_params,
+            filter=where_params_dict,
             sort=order_key,
             skip=meta_params["_offset"],
             limit=meta_params["_limit"],
         )
-
         return [
             {(k if k != "_id" else "id"): v for k, v in item.items()}
             for item in results
@@ -90,25 +90,30 @@ class MongoStorage(BaseStorage):
         self.bulk_get_ids(collection_name, items)
         collection = self.db[collection_name]
         if method == "POST":
-            requests = [
-                UpdateOne({"_id": item["id"]}, {"$set": item}, upsert=True)
+            update_requests = [
+                pymongo.UpdateOne({"_id": item["id"]}, {"$set": item}, upsert=True)
                 for item in items
             ]
+            collection.bulk_write(update_requests)
         else:
-            requests = [
-                ReplaceOne({"_id": item["id"]}, item, upsert=True) for item in items
+            replace_requests = [
+                pymongo.ReplaceOne({"_id": item["id"]}, item, upsert=True)
+                for item in items
             ]
-        collection.bulk_write(requests)
+            collection.bulk_write(replace_requests)
         return [item["id"] for item in items]
 
-    def delete(self, collection_name: str, item_id: int | str = None) -> bool:
+    def delete_with_id(self, collection_name: str, item_id: int | str) -> bool:
         collection = self.db[collection_name]
-        if item_id:
-            existed = collection.delete_one({"_id": item_id})
-            return existed
+        return bool(collection.delete_one({"_id": item_id}))
+
+    def delete_without_id(self, collection_name: str, where_params_list: list) -> None:
+        collection = self.db[collection_name]
+        if where_params_list:
+            where_params_dict = self.get_where_params(where_params_list)
+            collection.delete_many(where_params_dict)
         else:
-            existed = collection.drop()
-            return existed
+            collection.drop()
 
     def all(self) -> dict:
         return {
@@ -122,5 +127,11 @@ class MongoStorage(BaseStorage):
     def reset(self) -> None:
         self.db.client.drop_database(self.db)
 
-    def get_ids(self, collection_name: str) -> set:
-        return {item["_id"] for item in self.db[collection_name].find()}
+    def get_ids(self, collection_name: str) -> list[int | str]:
+        return [item["_id"] for item in self.db[collection_name].find()]
+
+    def get_items(self, collection_name: str) -> list[dict]:
+        return [
+            {(k if k != "_id" else "id"): v for k, v in item.items()}
+            for item in self.db[collection_name].find()
+        ]

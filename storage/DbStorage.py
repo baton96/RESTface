@@ -1,10 +1,12 @@
 import uuid
 
-import dataset
+import dataset  # type: ignore[import-untyped]
 
 
 class DbStorage:
-    def __init__(self, storage_path: str = "sqlite:///:memory:", uuid_id: bool = False):
+    def __init__(
+        self, storage_path: str | None = "sqlite:///:memory:", uuid_id: bool = False
+    ):
         self.db = dataset.connect(storage_path, row_type=dict)
         self.primary_type = self.db.types.string if uuid_id else self.db.types.integer
 
@@ -13,12 +15,12 @@ class DbStorage:
         return table.find_one(id=item_id)
 
     def get_without_id(
-        self, table_name: str, where_params: list, meta_params: dict
+        self, table_name: str, where_params_list: list, meta_params: dict
     ) -> list:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        where_params = {
+        where_params_dict = {
             param_name: ({op_name: param_value} if param_value else {"not": None})
-            for op_name, param_name, param_value in where_params
+            for op_name, param_name, param_value in where_params_list
         }
         if meta_params.pop("desc", False):
             meta_params["order_by"] = [
@@ -27,7 +29,7 @@ class DbStorage:
             ]
         if not meta_params["_limit"]:
             meta_params.pop("_limit", None)
-        params = {**where_params, **meta_params}
+        params = {**where_params_dict, **meta_params}
         items = list(table.find(**params))
         return items
 
@@ -59,18 +61,18 @@ class DbStorage:
             for upserted_id, item_id in zip(upserted_ids, item_ids)
         ]
 
-    def delete_with_id(self, table_name: str, item_id: int | str) -> None:
+    def delete_with_id(self, table_name: str, item_id: int | str) -> bool:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        return table.delete(id=item_id)
+        return bool(table.delete(id=item_id))
 
-    def delete_without_id(self, table_name: str, where_params: list) -> None:
+    def delete_without_id(self, table_name: str, where_params_list: list) -> None:
         table = self.db.get_table(table_name, primary_type=self.primary_type)
-        if where_params:
-            where_params = {
+        if where_params_list:
+            where_params_dict = {
                 param_name: ({op_name: param_value} if param_value else {"not": None})
-                for op_name, param_name, param_value in where_params
+                for op_name, param_name, param_value in where_params_list
             }
-            table.delete(**where_params)
+            table.delete(**where_params_dict)
         else:
             table.drop()
 

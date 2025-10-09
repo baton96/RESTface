@@ -13,7 +13,7 @@ class RESTface:
     def __init__(
         self,
         storage_type: str = "db",
-        storage_path: str = None,
+        storage_path: str | None = None,
         uuid_id: bool = False,
     ):
         self.storage = get_storage(storage_type, storage_path, uuid_id)
@@ -35,16 +35,16 @@ class RESTface:
         # stream = file.stream.read().decode("utf-8")
         name = file.filename
         if name.endswith(".json"):
-            pass
+            ...
         elif name.endswith(".csv"):
-            pass
+            ...
         elif name.endswith(".xml"):
-            pass
+            ...
         elif name.endswith(".yaml"):
-            pass
+            ...
 
     def create_subhierarchy(self, parts) -> dict:
-        parent_info = {}
+        parent_info: dict[str, int | str] = {}
         for i, part in enumerate(parts):
             item_id = parse_id(part)
             if item_id:
@@ -54,9 +54,10 @@ class RESTface:
                 data = {"id": item_id, **parent_info}
                 if i != len(parts) - 1:
                     self.storage.upsert(collection_name, data, "POST")
-                    parent_info = {
-                        self.engine.singular_noun(parts[i - 1]) + "_id": item_id
-                    }
+                    parent_name = (
+                        self.engine.singular_noun(parts[i - 1]) or parts[i - 1]
+                    )
+                    parent_info = {parent_name + "_id": item_id}
         return parent_info
 
     def get_params(self, url) -> dict:
@@ -144,12 +145,8 @@ class RESTface:
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
         item_id = parse_id(url_parts[-1])
         if item_id:
-            deleted = bool(self.storage.delete_with_id(str(url_parts[-2]), item_id))
-            if not deleted:
+            if not self.storage.delete_with_id(str(url_parts[-2]), item_id):
                 raise NotFound
         else:
             where_params = self.get_where_params(url_parts, self.get_params(url))
-            deleted = bool(
-                self.storage.delete_without_id(str(url_parts[-1]), where_params)
-            )
-        return deleted
+            self.storage.delete_without_id(str(url_parts[-1]), where_params)

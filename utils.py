@@ -13,7 +13,7 @@ engine = get_engine()
 
 
 def get_storage(
-    storage_type: str = "memory", storage_path: str = None, uuid_id: bool = False
+    storage_type: str = "memory", storage_path: str | None = None, uuid_id: bool = False
 ):
     if storage_type == "memory":
         from storage.MemoryStorage import MemoryStorage
@@ -71,7 +71,7 @@ def _to_xml(obj, tag: str) -> str:
 
 
 def to_xml(obj, collection_name: str) -> str:
-    item_name = engine.singular_noun(collection_name)
+    item_name = engine.singular_noun(collection_name) or collection_name
     if isinstance(obj, list):
         items = "".join(_to_xml(item, item_name) for item in obj)
         return f"<{collection_name}>{items}</{collection_name}>"
@@ -101,20 +101,20 @@ def to_csv(obj) -> str:
         return tmp_file.getvalue()
 
 
-def from_yaml(obj: str):
-    return yaml.safe_load(obj)
+def from_yaml(from_obj: str):
+    return yaml.safe_load(from_obj)
 
 
-def from_xml(obj: str):
-    obj = xmltodict.parse(obj)
+def from_xml(from_obj: str):
+    obj = xmltodict.parse(from_obj)
     name, obj = next(iter(obj.items()))
     if engine.singular_noun(name):
         obj = next(iter(obj.values()))
     return obj
 
 
-def from_csv(obj: str):
-    with StringIO(obj) as tmp_file:
+def from_csv(from_obj: str):
+    with StringIO(from_obj) as tmp_file:
         reader = csv.reader(tmp_file)
         keys = next(reader)
         objects = [dict(zip(keys, row)) for row in reader]
@@ -128,7 +128,7 @@ def from_csv(obj: str):
                 del obj[k]
                 parts = k.split(".")
                 for part in parts[:-1]:
-                    tmp = tmp.setdefault(part, {})
+                    tmp = tmp.setdefault(part, {})  # type: ignore
                 tmp[parts[-1]] = v
     if len(objects) == 1:
         return objects[0]

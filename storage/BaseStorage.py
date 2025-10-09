@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 
 class BaseStorage(ABC):
-    def __init__(self, _: str = None, uuid_id: bool = False):
+    def __init__(self, _: str | None = None, uuid_id: bool = False):
         self.primary_type = str if uuid_id else int
 
         op_names = ["eq", "ge", "gt", "le", "lt", "ne"]
@@ -32,8 +32,7 @@ class BaseStorage(ABC):
         )
 
     @abstractmethod
-    def get_with_id(self, table_name: str, item_id: int | str) -> dict:
-        pass
+    def get_with_id(self, table_name: str, item_id: int | str) -> dict: ...
 
     def fulfill_cond(self, item, parsed_param):
         op_name, param_name, param_value = parsed_param
@@ -75,43 +74,39 @@ class BaseStorage(ABC):
         return items[offset : offset + limit]
 
     @abstractmethod
-    def upsert(self, table_name: str, data: dict, method: str = "POST") -> int | str:
-        pass
+    def upsert(
+        self, table_name: str, data: dict, method: str = "POST"
+    ) -> int | str: ...
 
-    # @abstractmethod
+    @abstractmethod
     def bulk_upsert(
         self, table_name: str, items: list[dict], method: str = "POST"
-    ) -> list[int | str]:
-        pass
+    ) -> list[int | str]: ...
 
     @abstractmethod
-    def delete_with_id(self, table_name: str, item_id: int | str) -> None:
-        pass
+    def delete_with_id(self, table_name: str, item_id: int | str) -> bool: ...
 
     @abstractmethod
-    def delete_without_id(self, table_name: str, where_params: list) -> None:
-        pass
+    def delete_without_id(self, table_name: str, where_params: list) -> None: ...
 
     @abstractmethod
-    def all(self):
-        pass
+    def all(self): ...
 
     @abstractmethod
-    def reset(self) -> None:
-        pass
+    def reset(self) -> None: ...
 
-    def get_ids(self, collection_name: str) -> set:
-        pass
+    @abstractmethod
+    def get_ids(self, collection_name: str) -> list[int | str]: ...
 
-    def get_items(self, collection_name: str) -> list[dict]:
-        pass
+    @abstractmethod
+    def get_items(self, collection_name: str) -> list[dict]: ...
 
     def get_id(self, collection_name: str, data: dict) -> int | str:
-        item_id = data.get("id")
-        if not item_id:
+        item_id: int | str = data.get("id", "")
+        if "id" not in data:
             if self.primary_type is int:
                 item_ids = self.get_ids(collection_name)
-                item_id = max(item_ids or {0}) + 1
+                item_id = max(item_ids or [0]) + 1  # type: ignore[operator]
             elif self.primary_type is str:
                 item_id = str(uuid.uuid4())
             data["id"] = item_id
@@ -120,15 +115,15 @@ class BaseStorage(ABC):
     def bulk_get_ids(self, collection_name: str, items: list[dict]) -> list[int | str]:
         if self.primary_type is int:
             item_ids = self.get_ids(collection_name)
-            cur_max = max(item_ids or {0}) + 1
+            cur_max = max(item_ids or {0}) + 1  # type: ignore[operator]
         else:
             cur_max = None
         for item in items:
-            item_id = item.get("id")
+            item_id = item.get("id", "")
             if not item_id:
                 if self.primary_type is int:
                     item_id = cur_max
-                    cur_max += 1
+                    cur_max += 1  # type: ignore[operator]
                 elif self.primary_type is str:
                     item_id = str(uuid.uuid4())
                 item["id"] = item_id

@@ -1,11 +1,10 @@
 import tinydb
-from tinydb import where
 
 from .BaseStorage import BaseStorage
 
 
 class FileStorage(BaseStorage):
-    def __init__(self, storage_path: str = None, uuid_id: bool = False):
+    def __init__(self, storage_path: str | None = None, uuid_id: bool = False):
         super().__init__(storage_path, uuid_id)
         if storage_path:
             self.db = tinydb.TinyDB(storage_path)
@@ -23,8 +22,8 @@ class FileStorage(BaseStorage):
             try:
                 table.remove(doc_ids=[item_id])
             except KeyError:
-                pass
-        table.upsert(tinydb.table.Document(data, doc_id=item_id))
+                ...
+        table.upsert(tinydb.table.Document(data, doc_id=item_id))  # type: ignore[arg-type]
         return item_id
 
     def bulk_upsert(
@@ -35,7 +34,7 @@ class FileStorage(BaseStorage):
         item_ids = set(self.get_ids(table_name))
         table.update_multiple(
             [
-                (item, where("id") == item["id"])
+                (item, tinydb.where("id") == item["id"])
                 for item in items
                 if item["id"] in item_ids
             ]
@@ -49,12 +48,12 @@ class FileStorage(BaseStorage):
         )
         return [item["id"] for item in items]
 
-    def delete_with_id(self, table_name: str, doc_id: int | str):
+    def delete_with_id(self, table_name: str, doc_id: int | str) -> bool:
         table = self.get_table(table_name)
         try:
-            return table.remove(doc_ids=[doc_id])
+            return bool(table.remove(doc_ids=[doc_id]))
         except KeyError:
-            return []
+            return False
 
     def delete_without_id(self, table_name: str, where_params: list) -> None:
         if where_params:
@@ -76,8 +75,8 @@ class FileStorage(BaseStorage):
     def reset(self) -> None:
         self.db.drop_tables()
 
-    def get_ids(self, table_name: str) -> set:
-        return {item["id"] for item in self.get_table(table_name).all()}
+    def get_ids(self, table_name: str) -> list[int | str]:
+        return [item["id"] for item in self.get_table(table_name).all()]
 
     def get_table(self, table_name):
         table = self.db.table(table_name)

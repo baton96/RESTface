@@ -32,9 +32,7 @@ optional arguments:
 # Ideas:
 
 - **Example app using RESTface**
-- Better format handler
 - Persistent db dump
-- Type hints (mypy?)
 - Graph database storage
 - Authorization
 - Receiving files

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from sqlalchemy import Integer, UnicodeText, BigInteger, Float, Boolean
+from sqlalchemy import Integer, UnicodeText, BigInteger, Float, Boolean  # type: ignore[import-untyped]
 
 type_map = {
     Integer: "integer",
