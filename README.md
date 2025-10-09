@@ -21,18 +21,16 @@ optional arguments:
 
 # Storage types
 
-- `DbStorage` - Any type of database supported by sqlalchemy
+- `DbStorage` - any type of database supported by sqlalchemy
   (SQLite, Postgresql, MySQL, Oracle, MS-SQL, Firebird, Sybase); defaults to `sqlite:///:memory:`
 - `FileStorage` - JSON file storage; defaults to virtual file ie. in-memory storage
-- `MemoryStorage` - In-memory storage built from scratch
+- `MemoryStorage` - in-memory storage built from scratch
+- `RedisStorage` - defaults to `redis://localhost:6379/0`
 - ~~`MongoStorage`~~, defaults to `mongodb://localhost:27017`
-- ~~`RedisStorage`~~, defaults to `redis://localhost:6379/0`
 - ~~`Neo4jStorage`~~, defaults to `bolt://localhost:7687`
 
-# Ideas:
-
+# TODO:
 - **Example app using RESTface**
 - Persistent db dump
 - Graph database storage
-- Authorization
 - Receiving files

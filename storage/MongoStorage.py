@@ -105,7 +105,7 @@ class MongoStorage(BaseStorage):
 
     def delete_with_id(self, collection_name: str, item_id: int | str) -> bool:
         collection = self.db[collection_name]
-        return bool(collection.delete_one({"_id": item_id}))
+        return bool(collection.delete_one({"_id": item_id}).deleted_count)
 
     def delete_without_id(self, collection_name: str, where_params_list: list) -> None:
         collection = self.db[collection_name]

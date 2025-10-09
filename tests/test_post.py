@@ -125,7 +125,6 @@ def test_param_types(face):
     }
 
 
-@pytest.mark.skip
 def test_same_params(face):
     face.post("https://example.com/users/1?a=b&a=c")
     assert face.all() == {"users": [{"id": 1, "a": "b"}]}

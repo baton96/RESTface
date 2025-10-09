@@ -10,7 +10,7 @@ import RESTface
         "file",
         "db",
         # "mongo",
-        "redis",
+        # "redis",
     ],
 )
 def face(request):
