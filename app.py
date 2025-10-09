@@ -1,77 +1,69 @@
-from flask import Flask, request, jsonify, redirect, send_file
 from RESTface import RESTface
 from utils import reformat
 
-app = Flask(__name__)
-app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
+from fastapi import FastAPI, Request, UploadFile
+from fastapi.responses import RedirectResponse, FileResponse
+
+app = FastAPI()
 
 face = RESTface()
 
 
 @app.get("/favicon.ico")
-def favicon():
-    return redirect(
+async def favicon():
+    return RedirectResponse(
         "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
     )
 
 
 @app.get("/openapi.json")
-def openapi():
-    return jsonify(face.openapi())
+async def openapi():
+    return face.openapi()
 
 
 @app.get("/docs")
-def docs():
-    return send_file("docs.html")
+async def docs():
+    return FileResponse("docs.html")
 
 
-@app.get("/")
-def get_all():
-    return jsonify(face.all())
-
-
-@app.post("/")
-def receive_file():
-    face.receive_file(request)
+@app.post("/upload")
+async def upload(file: UploadFile):
+    face.upload(file)
     return "", 204
 
 
+@app.get("/")
+async def get_all():
+    return face.all()
+
+
 @app.delete("/")
-def reset():
+async def reset():
     face.reset()
     return "", 204
 
 
-@app.get("/<path:path>")
-def get(path):
+@app.get("/{path:path}")
+async def get(path: str, request: Request):
     result = face.get(path)
-    if "format" in request.args:
-        return reformat(result)
-    return jsonify(result)
+    if "format" in request.query_params:
+        return reformat(request, result)
+    return result
 
 
-@app.post("/<path:path>")
-def post(path):
-    body = request.get_json(force=True, silent=True) or {}
-    face.post(path, body)
+@app.post("/{path:path}")
+async def post(path: str, request: Request):
+    face.post(path, await request.json())
     return "", 204
 
 
-@app.put("/<path:path>")
-def put(path):
-    body = request.get_json(force=True, silent=True) or {}
-    face.put(path, body)
+@app.put("/{path:path}")
+async def put(path: str, request: Request):
+    face.put(path, await request.json())
     return "", 204
 
 
-@app.delete("/<path:path>")
-def delete(path):
+@app.delete("/{path:path}")
+async def delete(path: str):
     face.delete(path)
-    return "", 204
-
-
-@app.post("/upload")
-def upload():
-    file = next(iter(request.files.values()))
-    face.upload(file)
     return "", 204

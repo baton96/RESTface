@@ -1,8 +1,8 @@
 import re
 from urllib import parse
 
+from fastapi import UploadFile, HTTPException
 from inflect import engine as get_engine
-from werkzeug.exceptions import NotFound
 
 from openapi import get_schema
 from storage.DbStorage import DbStorage
@@ -30,10 +30,12 @@ class RESTface:
             raise NotImplementedError
         return get_schema(self.storage.db, self.engine)
 
-    def upload(self, file):
+    def upload(self, file: UploadFile):
+        if not file.filename:
+            raise
         table_name = file.filename.split(".")[0]
-        keys = file.stream.readline().decode("utf-8").strip().split(",")
-        for item in file.stream:
+        keys = file.file.readline().decode("utf-8").strip().split(",")
+        for item in file.file:
             values = item.decode("utf-8").strip().split(",")
             self.post(table_name, dict(zip(keys, values)))
 
@@ -113,7 +115,7 @@ class RESTface:
         if item_id:
             item = self.storage.get_with_id(str(url_parts[-2]), item_id)
             if not item:
-                raise NotFound
+                raise HTTPException(404)
             return item
 
         params = self.get_params(url)
@@ -142,7 +144,7 @@ class RESTface:
         item_id = parse_id(url_parts[-1])
         if item_id:
             if not self.storage.delete_with_id(str(url_parts[-2]), item_id):
-                raise NotFound
+                raise HTTPException(404)
         else:
             where_params = self.get_where_params(url_parts, self.get_params(url))
             self.storage.delete_without_id(str(url_parts[-1]), where_params)

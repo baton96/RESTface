@@ -5,7 +5,7 @@ from json import loads
 from uuid import UUID
 
 import yaml
-from flask import request, jsonify, Response
+from fastapi import Response, Request
 from inflect import engine as get_engine
 
 
@@ -110,18 +110,18 @@ def get_collection_name(path):
     return collection_name
 
 
-def reformat(result):
-    collection_name = get_collection_name(request.path)
-    response_format = request.args.get("format")
+def reformat(request: Request, result):
+    collection_name = get_collection_name(request.url.path)
+    response_format = request.query_params.get("format")
     if response_format == "csv":
         return Response(
             to_csv(result),
-            mimetype="text/csv",
+            media_type="text/csv",
             headers={"Content-Disposition": f"filename={collection_name}.csv"},
         )
     elif response_format == "xml":
-        return Response(to_xml(result, collection_name), mimetype="text/xml")
+        return Response(to_xml(result, collection_name), media_type="text/xml")
     elif response_format == "yaml":
-        return Response(to_yaml(result), mimetype="text/yaml")
+        return Response(to_yaml(result), media_type="text/yaml")
     else:
-        return jsonify(result)
+        return result

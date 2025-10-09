@@ -33,4 +33,3 @@ optional arguments:
 - **Example app using RESTface**
 - Persistent db dump
 - Graph database storage
-- FastAPI instead of Flask

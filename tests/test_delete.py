@@ -1,5 +1,5 @@
 import pytest
-from werkzeug.exceptions import NotFound
+from fastapi import HTTPException
 
 
 @pytest.fixture(autouse=True)
@@ -14,7 +14,7 @@ def test_delete_one_existing(face):
 
 
 def test_delete_nonexisting(face):
-    with pytest.raises(NotFound):
+    with pytest.raises(HTTPException):
         face.delete("https://example.com/users/2")
 
 

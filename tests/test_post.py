@@ -3,16 +3,9 @@ import warnings
 from io import BytesIO
 
 import pytest
-from werkzeug.datastructures import FileStorage
+from fastapi import UploadFile
 
 from utils import parse_id
-
-"""def is_valid_uuid(element):
-    try:
-        uuid.UUID(element)
-        return True
-    except (ValueError, AttributeError):
-        return False"""
 
 
 def test_simple_no_id(face):
@@ -179,7 +172,7 @@ def test_bulk_partially_existing(face):
 
 
 def test_upload(face):
-    file = FileStorage(filename="users.csv", stream=BytesIO(b"id,name\n1,a\n2,b"))
+    file = UploadFile(filename="users.csv", file=BytesIO(b"id,name\n1,a\n2,b"))
     face.upload(file)
     assert face.all() == {
         "users": [

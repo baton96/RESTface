@@ -1,5 +1,5 @@
 import pytest
-from werkzeug.exceptions import NotFound
+from fastapi import HTTPException
 
 
 @pytest.fixture
@@ -143,10 +143,10 @@ def test_only_names(face):
 
 
 def test_only_ids(face):
-    with pytest.raises(NotFound):
+    with pytest.raises(HTTPException):
         face.get("https://example.com/1/2")
 
 
 def test_nonexisting(face):
-    with pytest.raises(NotFound):
+    with pytest.raises(HTTPException):
         face.get("https://example.com/users/1")
