@@ -70,18 +70,8 @@ def delete(path):
     return "", 204
 
 
-# @app.route('/upload', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.post("/upload")
 def upload():
-    if request.method == "GET":
-        return """
-            <form method=post enctype=multipart/form-data>
-                <input type=file name=file123 multiple>
-                <input type=submit value=Upload>
-            </form>
-        """
-    else:
-        if request.files:
-            file = next(iter(request.files.values()))
-            print(file.stream.read().decode("utf-8"))
-            print(file.filename)
-        return "OK"
+    file = next(iter(request.files.values()))
+    face.upload(file)
+    return "", 204

@@ -4,12 +4,9 @@ from io import StringIO
 from json import loads
 from uuid import UUID
 
-import xmltodict
 import yaml
 from flask import request, jsonify, Response
 from inflect import engine as get_engine
-
-engine = get_engine()
 
 
 def get_storage(
@@ -71,6 +68,7 @@ def _to_xml(obj, tag: str) -> str:
 
 
 def to_xml(obj, collection_name: str) -> str:
+    engine = get_engine()
     item_name = engine.singular_noun(collection_name) or collection_name
     if isinstance(obj, list):
         items = "".join(_to_xml(item, item_name) for item in obj)
@@ -99,41 +97,6 @@ def to_csv(obj) -> str:
         writer.writerow(keys)
         writer.writerows((obj.get(key) for key in keys) for obj in objects)
         return tmp_file.getvalue()
-
-
-def from_yaml(from_obj: str):
-    return yaml.safe_load(from_obj)
-
-
-def from_xml(from_obj: str):
-    obj = xmltodict.parse(from_obj)
-    name, obj = next(iter(obj.items()))
-    if engine.singular_noun(name):
-        obj = next(iter(obj.values()))
-    return obj
-
-
-def from_csv(from_obj: str):
-    with StringIO(from_obj) as tmp_file:
-        reader = csv.reader(tmp_file)
-        keys = next(reader)
-        objects = [dict(zip(keys, row)) for row in reader]
-    for obj in objects:
-        for k, v in list(obj.items()):
-            if v == "":
-                del obj[k]
-                continue
-            if "." in k:
-                tmp = obj
-                del obj[k]
-                parts = k.split(".")
-                for part in parts[:-1]:
-                    tmp = tmp.setdefault(part, {})  # type: ignore
-                tmp[parts[-1]] = v
-    if len(objects) == 1:
-        return objects[0]
-    else:
-        return objects
 
 
 def get_collection_name(path):

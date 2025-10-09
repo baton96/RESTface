@@ -12,7 +12,7 @@ from utils import get_storage, parse_param, parse_id
 class RESTface:
     def __init__(
         self,
-        storage_type: str = "db",
+        storage_type: str = "memory",
         storage_path: str | None = None,
         uuid_id: bool = False,
     ):
@@ -30,18 +30,12 @@ class RESTface:
             raise NotImplementedError
         return get_schema(self.storage.db, self.engine)
 
-    def receive_file(self, request):
-        file = next(iter(request.files.values()))
-        # stream = file.stream.read().decode("utf-8")
-        name = file.filename
-        if name.endswith(".json"):
-            ...
-        elif name.endswith(".csv"):
-            ...
-        elif name.endswith(".xml"):
-            ...
-        elif name.endswith(".yaml"):
-            ...
+    def upload(self, file):
+        table_name = file.filename.split(".")[0]
+        keys = file.stream.readline().decode("utf-8").strip().split(",")
+        for item in file.stream:
+            values = item.decode("utf-8").strip().split(",")
+            self.post(table_name, dict(zip(keys, values)))
 
     def create_subhierarchy(self, parts) -> dict:
         parent_info: dict[str, int | str] = {}
@@ -104,6 +98,8 @@ class RESTface:
                 body = [{**parent_info, **params, **item} for item in body]
             return self.storage.bulk_upsert(collection_name, body, method)
         elif isinstance(body, dict):
+            if "id" in body:
+                body["id"] = parse_id(body["id"])
             item_id = {"id": item_id} if item_id else {}
             data = {**parent_info, **item_id, **params, **body}
             return self.storage.upsert(collection_name, data, method)

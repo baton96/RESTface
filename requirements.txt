@@ -6,5 +6,4 @@ pymongo
 redis
 pyyaml
 pytest
-xmltodict
 ruff

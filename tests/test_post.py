@@ -1,7 +1,9 @@
 import uuid
 import warnings
+from io import BytesIO
 
 import pytest
+from werkzeug.datastructures import FileStorage
 
 from utils import parse_id
 
@@ -172,5 +174,16 @@ def test_bulk_partially_existing(face):
             {"id": 1, "name": "c"},
             {"id": 2, "name": "b"},
             {"id": 3, "name": "d"},
+        ]
+    }
+
+
+def test_upload(face):
+    file = FileStorage(filename="users.csv", stream=BytesIO(b"id,name\n1,a\n2,b"))
+    face.upload(file)
+    assert face.all() == {
+        "users": [
+            {"id": 1, "name": "a"},
+            {"id": 2, "name": "b"},
         ]
     }
