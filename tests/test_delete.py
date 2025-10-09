@@ -2,36 +2,33 @@ import pytest
 from werkzeug.exceptions import NotFound
 
 
+@pytest.fixture(autouse=True)
+def item(face):
+    face.post("https://example.com/users")
+    assert face.all() == {"users": [{"id": 1}]}
+
+
 def test_delete_one_existing(face):
-    request = {"url": "https://example.com/users/1"}
-    assert face.post(request) == 1
-    face.delete(request)
+    face.delete("https://example.com/users/1")
     assert face.all() == {"users": []}
 
 
 def test_delete_nonexisting(face):
-    request = {"url": "https://example.com/users/1"}
     with pytest.raises(NotFound):
-        face.delete(request)
+        face.delete("https://example.com/users/2")
 
 
 def test_delete_all_existing(face):
-    request = {"url": "https://example.com/users"}
-    assert face.post(request) == 1
-    face.delete(request)
+    face.delete("https://example.com/users")
     assert face.all() == {}
 
 
 def test_delete_all_nonexisting(face):
-    request = {"url": "https://example.com/users"}
-    assert face.post(request) == 1
-    face.delete(request)
-    face.delete(request)
+    face.delete("https://example.com/users")
+    face.delete("https://example.com/users")
     assert face.all() == {}
 
 
 def test_delete_one_where_cond(face):
-    request = {"url": "https://example.com/users?name=myname"}
-    assert face.post(request) == 1
-    face.delete(request)
+    face.delete("https://example.com/users?id=1")
     assert face.all() == {"users": []}

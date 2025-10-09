@@ -10,10 +10,9 @@ face = RESTface()
 
 @app.get("/favicon.ico")
 def favicon():
-    favicon_url = (
+    return redirect(
         "https://images.emojiterra.com/microsoft/fluent-emoji/15.1/3d/1f634_3d.png"
     )
-    return redirect(favicon_url)
 
 
 @app.get("/openapi.json")
@@ -45,22 +44,29 @@ def reset():
 
 @app.get("/<path:path>")
 def get(path):
-    result = face.get({"url": path})
+    result = face.get(path)
     if "format" in request.args:
         return reformat(result)
     return jsonify(result)
 
 
 @app.post("/<path:path>")
+def post(path):
+    body = request.get_json(force=True, silent=True) or {}
+    face.post(path, body)
+    return "", 204
+
+
 @app.put("/<path:path>")
-def upsert(path):
-    face.upsert({"url": path}, request.method)
+def put(path):
+    body = request.get_json(force=True, silent=True) or {}
+    face.put(path, body)
     return "", 204
 
 
 @app.delete("/<path:path>")
 def delete(path):
-    face.delete({"url": path})
+    face.delete(path)
     return "", 204
 
 

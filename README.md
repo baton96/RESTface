@@ -32,7 +32,6 @@ optional arguments:
 # Ideas:
 
 - **Example app using RESTface**
-- Better (separate) methods handler
 - Better format handler
 - Persistent db dump
 - Type hints (mypy?)

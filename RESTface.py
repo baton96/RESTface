@@ -59,8 +59,7 @@ class RESTface:
                     }
         return parent_info
 
-    def get_params(self, request) -> dict:
-        url = request["url"]
+    def get_params(self, url) -> dict:
         query = parse.urlsplit(url).query
         params = parse.parse_qs(query, keep_blank_values=True)
         params = {
@@ -90,15 +89,15 @@ class RESTface:
             where_params += [[op_name, param_name, param_value]]
         return where_params
 
-    def upsert(self, request, method):
-        path = parse.urlsplit(request["url"]).path
+    def upsert(self, url, body, method):
+        path = parse.urlsplit(url).path
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
         item_id = parse_id(url_parts[-1])
         collection_name = str(url_parts[-2 if item_id else -1])
 
         parent_info = self.create_subhierarchy(url_parts)
-        params = self.get_params(request)
-        body = request.get("body", {})
+        params = self.get_params(url)
+        body = body or {}
         if isinstance(body, list):
             if parent_info or params:
                 body = [{**parent_info, **params, **item} for item in body]
@@ -110,8 +109,8 @@ class RESTface:
         else:
             raise Exception("Body has to be valid JSON")
 
-    def get(self, request):
-        path = parse.urlsplit(request["url"]).path
+    def get(self, url):
+        path = parse.urlsplit(url).path
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
         item_id = parse_id(url_parts[-1])
         if item_id:
@@ -120,7 +119,7 @@ class RESTface:
                 raise NotFound
             return item
 
-        params = self.get_params(request)
+        params = self.get_params(url)
         order_by = re.split(", ?", params.pop("order_by", "id").strip("({[]})"))
         meta_params = {
             "order_by": order_by,
@@ -134,19 +133,23 @@ class RESTface:
             str(url_parts[-1]), where_params, meta_params
         )
 
-    def post(self, request):
-        return self.upsert(request, "POST")
+    def post(self, url, body=None):
+        return self.upsert(url, body, "POST")
 
-    def put(self, request):
-        return self.upsert(request, "PUT")
+    def put(self, url, body=None):
+        return self.upsert(url, body, "PUT")
 
-    def delete(self, request):
-        path = parse.urlsplit(request["url"]).path
+    def delete(self, url):
+        path = parse.urlsplit(url).path
         url_parts = re.sub(r"^\d+", "", path).strip("/").split("/")
         item_id = parse_id(url_parts[-1])
         if item_id:
-            if not self.storage.delete_with_id(str(url_parts[-2]), item_id):
+            deleted = bool(self.storage.delete_with_id(str(url_parts[-2]), item_id))
+            if not deleted:
                 raise NotFound
         else:
-            where_params = self.get_where_params(url_parts, self.get_params(request))
-            self.storage.delete_without_id(str(url_parts[-1]), where_params)
+            where_params = self.get_where_params(url_parts, self.get_params(url))
+            deleted = bool(
+                self.storage.delete_without_id(str(url_parts[-1]), where_params)
+            )
+        return deleted
